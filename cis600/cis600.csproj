@@ -24,16 +24,14 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app.css" />
-    <Content Include="hw1.html" />
-    <Content Include="hw1.js" />
     <Content Include="index.html" />
     <Content Include="packages.config" />
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="app.ts" />
     <TypeScriptCompile Include="BaseTimer.ts" />
     <TypeScriptCompile Include="Hw1Controller.ts" />
+    <TypeScriptCompile Include="Hw2Controller.ts" />
     <TypeScriptCompile Include="Scripts\typings\d3\d3.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\d3\plugins\d3.superformula.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />

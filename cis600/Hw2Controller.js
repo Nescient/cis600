@@ -40,13 +40,11 @@ var Hw2Controller = (function (_super) {
         return ((n % m) + m) % m;
     };
     Hw2Controller.prototype.nextRow = function (row) {
-        var rval;
+        var rval = Array(row.length);
         for (var i = 0; i < row.length; ++i) {
-            var p = (i - 1) % row.length;
-            var x = this.realMod(i - 1, row.length);
-            var previous = row[this.realMod((i - 1), row.length)];
-            var current = row[(i) % row.length];
-            var next = row[(i + 1) % row.length];
+            var previous = row[this.realMod(i - 1, row.length)];
+            var current = row[this.realMod(i, row.length)];
+            var next = row[this.realMod(i + 1, row.length)];
             rval[i] = this.lookupRule(previous, current, next);
         }
         return rval;
@@ -79,7 +77,7 @@ var Hw2Controller = (function (_super) {
                 width: rec_width,
                 height: rec_width,
                 "fill": "#000",
-                "fill-opacity": row[i]
+                "fill-opacity": row[i] ? 1 : 0
             });
         }
     };

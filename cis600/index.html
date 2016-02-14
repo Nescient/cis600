@@ -10,6 +10,7 @@
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="BaseTimer.js"></script>
     <script src="Hw1Controller.js"></script>
+    <script src="Hw2Controller.js"></script>
 </head>
 <body>
 
@@ -35,7 +36,9 @@
                     var hw = new Hw1Controller("timep");
                     hw.start();
                     break;
+                default:
                 case "2":
+                    new Hw2Controller("timep").start();
                     break;
             }
         }

@@ -44,13 +44,11 @@ class Hw2Controller extends BaseTimer {
     }
 
     nextRow(row: boolean[]): boolean[] {
-        var rval: boolean[];
+        var rval: boolean[] = Array(row.length);
         for (var i: number = 0; i < row.length; ++i) {
-            var p = (i - 1) % row.length;
-            var x = this.realMod(i - 1, row.length);
-            var previous: boolean = row[this.realMod((i - 1), row.length)];
-            var current: boolean = row[(i) % row.length];
-            var next: boolean = row[(i + 1) % row.length];
+            var previous: boolean = row[this.realMod(i - 1, row.length)];
+            var current:  boolean = row[this.realMod(i,     row.length)];
+            var next:     boolean = row[this.realMod(i + 1, row.length)];
             rval[i] = this.lookupRule(previous, current, next);
         }
         return rval;
@@ -86,7 +84,7 @@ class Hw2Controller extends BaseTimer {
                 width: rec_width,
                 height: rec_width,
                 "fill": "#000",
-                "fill-opacity": row[i]
+                "fill-opacity": row[i] ? 1 : 0
             });
         }
     }
