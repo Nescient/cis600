@@ -30,7 +30,6 @@ abstract class BaseTimer {
     onTimerElapse() {
         this.updateTime();
         this.dostuff();
-        //$("#timep").text(new Date().toUTCString() + " oheayah");
         return;
     }
 

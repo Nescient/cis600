@@ -59,14 +59,12 @@ class Hw1Controller extends BaseTimer {
         return;
     }
 
-    plot(x : number, y : number) {
-       // var svg = d3.select("#graph");
+    plot(x: number, y: number) {
         this.svg.append("circle")
             .attr("cx", x_scale(x))
             .attr("cy", y_scale(y))
             .attr("r", 2)
             .style("fill", "purple");
-        //alert("plot " + String(x) + " " + String(y));
     }
 
 }

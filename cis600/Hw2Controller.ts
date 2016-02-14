@@ -4,9 +4,6 @@ class Hw2Controller extends BaseTimer {
     svg: any;
     currentRow: boolean[] = [];
     data: boolean[][] = [];
-    xScale: any;
-    yScale: any;
-    count: number = 0;
 
     constructor(elementId: string) {
         super(elementId);
@@ -17,29 +14,16 @@ class Hw2Controller extends BaseTimer {
         }
 
         var svg = d3.select("main").append("canvas");
-        svg.attr("width", 1000).attr("height", 1000);
+        svg.attr("width", length * 2).attr("height", length * 2);
         this.svg = svg;
-        this.xScale = d3.scale.linear()
-            .domain([-10, 10])
-            .range([0, 1000]);
-        this.yScale = d3.scale.linear()
-            .domain([-10, 10])
-            .range([1000, 0]);
-
-        this.graphRow(this.currentRow, this.count++);
-
-        d3.timer(() => {
-            var next_row: boolean[] = this.nextRow(this.currentRow);
-            this.graphRow(next_row, this.count++/*this.data.length*/);
-            this.currentRow = next_row; }, this.timerTimeout);
+        this.graphRow(this.currentRow, 0);
         return;
     }
 
     dostuff() {
-        return;
         var next_row: boolean[] = this.nextRow(this.currentRow);
-       // this.data.push(this.currentRow);
-        this.graphRow(next_row, this.count++/*this.data.length*/);
+        this.data.push(this.currentRow);
+        this.graphRow(next_row, this.data.length);
         this.currentRow = next_row;
         return;
     }
@@ -54,8 +38,8 @@ class Hw2Controller extends BaseTimer {
         var rval: boolean[] = Array(row.length);
         for (var i: number = 0; i < row.length; ++i) {
             var previous: boolean = row[this.realMod(i - 1, row.length)];
-            var current:  boolean = row[this.realMod(i,     row.length)];
-            var next:     boolean = row[this.realMod(i + 1, row.length)];
+            var current: boolean = row[this.realMod(i, row.length)];
+            var next: boolean = row[this.realMod(i + 1, row.length)];
             rval[i] = this.lookupRule(previous, current, next);
         }
         return rval;
@@ -74,17 +58,35 @@ class Hw2Controller extends BaseTimer {
         var total_width = parseInt(this.svg.style("width"));
         var rec_width = total_width / row.length;
         var y_index = yIndex * rec_width;
+        var context = this.svg.node().getContext("2d");
 
-        for (var i: number = 0; i < row.length; ++i) {
-            this.svg.append("rect").attr({
-                x: i * rec_width,
-                y: y_index,
-                width: rec_width,
-                height: rec_width,
-                "fill": "#000",
-                "fill-opacity": row[i] ? 1 : 0
-            });
-        }
+        //var total_height = parseInt(this.svg.style("height"));
+        //if (total_height < y_index) {
+        //    var svg = d3.select("main").append("canvas");
+        //    svg.attr("width", total_width).attr("height", y_index * 2);
+        //    this.svg = svg;
+        //}
+
+        row.forEach(function (d, i) {
+            context.beginPath();
+            context.rect(i * rec_width, y_index, rec_width, rec_width);
+            if (row[i]) {
+                context.fillStyle = "#000";
+                context.fill();
+            }
+            context.closePath();
+        });
+
+        //for (var i: number = 0; i < row.length; ++i) {
+        //    this.svg.append("rect").attr({
+        //        x: i * rec_width,
+        //        y: y_index,
+        //        width: rec_width,
+        //        height: rec_width,
+        //        "fill": "#000",
+        //        "fill-opacity": row[i] ? 1 : 0
+        //    });
+        //}
     }
 
 }

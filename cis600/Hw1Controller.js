@@ -50,13 +50,11 @@ var Hw1Controller = (function (_super) {
         return;
     };
     Hw1Controller.prototype.plot = function (x, y) {
-        // var svg = d3.select("#graph");
         this.svg.append("circle")
             .attr("cx", x_scale(x))
             .attr("cy", y_scale(y))
             .attr("r", 2)
             .style("fill", "purple");
-        //alert("plot " + String(x) + " " + String(y));
     };
     return Hw1Controller;
 })(BaseTimer);
