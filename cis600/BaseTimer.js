@@ -1,19 +1,22 @@
+/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
 var BaseTimer = (function () {
-    function BaseTimer(element) {
-        this.element = element;
+    function BaseTimer(elementId) {
+        this.timeId = elementId;
         this.timerTimeout = 50;
         this.updateTime();
         return;
     }
     BaseTimer.prototype.updateTime = function () {
-        this.element.innerText = new Date().toUTCString();
+        $("#" + this.timeId).text(new Date().toUTCString());
         return;
     };
     BaseTimer.prototype.start = function () {
-        this.timerToken = setInterval(function () {
+        this.timerToken = setInterval(function () { return function () {
             this.updateTime();
             this.dostuff();
-        }, this.timerTimeout);
+            $("#timep").text(new Date().toUTCString() + " oheayah");
+            return;
+        }; }, this.timerTimeout);
         return;
     };
     BaseTimer.prototype.stop = function () {

@@ -1,4 +1,6 @@
-﻿declare var d3: any;
+﻿
+
+//declare var d3: any;
 
 var y_scale, x_scale;
 
@@ -24,19 +26,26 @@ var y_scale, x_scale;
 //}
 
 class Hw1Controller extends BaseTimer {
-    svg: SVGElement;
+    svg: any;
     x: number;
     y: number;
     a: number;
     b: number;
 
-    constructor(element: HTMLElement, svg: SVGElement) {
-        super(element);
+    constructor(elementId: string) {
+        super(elementId);
         this.x = this.y = 0;
         this.a = 1.4;
         this.b = 0.3;
+        var svg = d3.select("body").append("svg");
+        svg.attr("width", 1000).attr("height", 1000);
         this.svg = svg;
-        init_svg();
+        x_scale = d3.scale.linear()
+            .domain([-10, 10])
+            .range([0, 1000]);
+        y_scale = d3.scale.linear()
+            .domain([-10, 10])
+            .range([1000, 0]);
     }
 
     dostuff() {
@@ -50,14 +59,4 @@ class Hw1Controller extends BaseTimer {
         return;
     }
 
-    init_svg () {
-        var svg = d3.select("#graph");
-        svg.attr("width", 1000).attr("height", 1000);
-        x_scale = d3.scale.linear()
-            .domain([-10, 10])
-            .range([0, 1000]);
-        y_scale = d3.scale.linear()
-            .domain([-10, 10])
-            .range([1000, 0]);
-    }
 }
