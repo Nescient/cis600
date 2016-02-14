@@ -7,15 +7,17 @@ var length = 400;
 var Hw2Controller = (function (_super) {
     __extends(Hw2Controller, _super);
     function Hw2Controller(elementId) {
+        var _this = this;
         _super.call(this, elementId);
         this.currentRow = [];
         this.data = [];
+        this.count = 0;
         // http://stackoverflow.com/a/20066663
         //this.currentRow = Array.apply(null, { length: length }).map(Function.call, Math.random);
         for (var i = 0; i < length; ++i) {
             this.currentRow.push(Math.random() < 0.5);
         }
-        var svg = d3.select("main").append("svg");
+        var svg = d3.select("main").append("canvas");
         svg.attr("width", 1000).attr("height", 1000);
         this.svg = svg;
         this.xScale = d3.scale.linear()
@@ -24,13 +26,19 @@ var Hw2Controller = (function (_super) {
         this.yScale = d3.scale.linear()
             .domain([-10, 10])
             .range([1000, 0]);
-        this.graphRow(this.currentRow, 0);
+        this.graphRow(this.currentRow, this.count++);
+        d3.timer(function () {
+            var next_row = _this.nextRow(_this.currentRow);
+            _this.graphRow(next_row, _this.count++ /*this.data.length*/);
+            _this.currentRow = next_row;
+        }, this.timerTimeout);
         return;
     }
     Hw2Controller.prototype.dostuff = function () {
+        return;
         var next_row = this.nextRow(this.currentRow);
-        this.data.push(this.currentRow);
-        this.graphRow(next_row, this.data.length);
+        // this.data.push(this.currentRow);
+        this.graphRow(next_row, this.count++ /*this.data.length*/);
         this.currentRow = next_row;
         return;
     };
@@ -58,15 +66,6 @@ var Hw2Controller = (function (_super) {
         return (index < states.length ? states[index] : false);
     };
     Hw2Controller.prototype.graphRow = function (row, yIndex) {
-        //plot(x: number, y: number) {
-        //    // var svg = d3.select("#graph");
-        //    this.svg.append("circle")
-        //        .attr("cx", x_scale(x))
-        //        .attr("cy", y_scale(y))
-        //        .attr("r", 2)
-        //        .style("fill", "purple");
-        //    //alert("plot " + String(x) + " " + String(y));
-        //}
         var total_width = parseInt(this.svg.style("width"));
         var rec_width = total_width / row.length;
         var y_index = yIndex * rec_width;

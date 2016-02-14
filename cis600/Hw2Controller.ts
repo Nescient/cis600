@@ -6,6 +6,7 @@ class Hw2Controller extends BaseTimer {
     data: boolean[][] = [];
     xScale: any;
     yScale: any;
+    count: number = 0;
 
     constructor(elementId: string) {
         super(elementId);
@@ -15,7 +16,7 @@ class Hw2Controller extends BaseTimer {
             this.currentRow.push(Math.random() < 0.5);
         }
 
-        var svg = d3.select("main").append("svg");
+        var svg = d3.select("main").append("canvas");
         svg.attr("width", 1000).attr("height", 1000);
         this.svg = svg;
         this.xScale = d3.scale.linear()
@@ -25,14 +26,20 @@ class Hw2Controller extends BaseTimer {
             .domain([-10, 10])
             .range([1000, 0]);
 
-        this.graphRow(this.currentRow, 0);
+        this.graphRow(this.currentRow, this.count++);
+
+        d3.timer(() => {
+            var next_row: boolean[] = this.nextRow(this.currentRow);
+            this.graphRow(next_row, this.count++/*this.data.length*/);
+            this.currentRow = next_row; }, this.timerTimeout);
         return;
     }
 
     dostuff() {
+        return;
         var next_row: boolean[] = this.nextRow(this.currentRow);
-        this.data.push(this.currentRow);
-        this.graphRow(next_row, this.data.length);
+       // this.data.push(this.currentRow);
+        this.graphRow(next_row, this.count++/*this.data.length*/);
         this.currentRow = next_row;
         return;
     }
@@ -64,15 +71,6 @@ class Hw2Controller extends BaseTimer {
     }
 
     graphRow(row: boolean[], yIndex: number) {
-        //plot(x: number, y: number) {
-        //    // var svg = d3.select("#graph");
-        //    this.svg.append("circle")
-        //        .attr("cx", x_scale(x))
-        //        .attr("cy", y_scale(y))
-        //        .attr("r", 2)
-        //        .style("fill", "purple");
-        //    //alert("plot " + String(x) + " " + String(y));
-        //}
         var total_width = parseInt(this.svg.style("width"));
         var rec_width = total_width / row.length;
         var y_index = yIndex * rec_width;
