@@ -55,12 +55,12 @@ class Greeter {
 
 }
 
-window.onload = () => {
-    var el = document.getElementById('content');
-    var s1 = <SVGElement><any>document.getElementById('graph');
-    var greeter = new Greeter(el, s1);
-    greeter.start();
-};
+//window.onload = () => {
+//    var el = document.getElementById('content');
+//    var s1 = <SVGElement><any>document.getElementById('graph');
+//    var greeter = new Greeter(el, s1);
+//    greeter.start();
+//};
 
 //class Greeter {
 //    element: HTMLElement;

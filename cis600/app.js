@@ -37,12 +37,12 @@ var Greeter = (function () {
     };
     return Greeter;
 })();
-window.onload = function () {
-    var el = document.getElementById('content');
-    var s1 = document.getElementById('graph');
-    var greeter = new Greeter(el, s1);
-    greeter.start();
-};
+//window.onload = () => {
+//    var el = document.getElementById('content');
+//    var s1 = <SVGElement><any>document.getElementById('graph');
+//    var greeter = new Greeter(el, s1);
+//    greeter.start();
+//};
 //class Greeter {
 //    element: HTMLElement;
 //    span: HTMLElement;
