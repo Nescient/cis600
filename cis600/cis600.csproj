@@ -28,12 +28,7 @@
     <Content Include="web.config" />
   </ItemGroup>
   <ItemGroup>
-    <TypeScriptCompile Include="app.component.ts" />
     <TypeScriptCompile Include="app.ts" />
-    <TypeScriptCompile Include="main.ts" />
-    <TypeScriptCompile Include="typings\es6-promise\es6-promise.d.ts" />
-    <TypeScriptCompile Include="typings\rx\rx-lite.d.ts" />
-    <TypeScriptCompile Include="typings\rx\rx.d.ts" />
   </ItemGroup>
   <ItemGroup>
     <None Include="web.Debug.config">
