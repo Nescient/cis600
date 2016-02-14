@@ -37,7 +37,7 @@ class Hw1Controller extends BaseTimer {
         this.x = this.y = 0;
         this.a = 1.4;
         this.b = 0.3;
-        var svg = d3.select("body").append("svg");
+        var svg = d3.select("main").append("svg");
         svg.attr("width", 1000).attr("height", 1000);
         this.svg = svg;
         x_scale = d3.scale.linear()
@@ -49,7 +49,7 @@ class Hw1Controller extends BaseTimer {
     }
 
     dostuff() {
-        plot(this.x, this.y);
+        this.plot(this.x, this.y);
 
         var x = 1 - this.a * (this.x * this.x) + this.y;
         var y = this.b * this.x;
@@ -57,6 +57,16 @@ class Hw1Controller extends BaseTimer {
         this.y = y;
 
         return;
+    }
+
+    plot(x : number, y : number) {
+       // var svg = d3.select("#graph");
+        this.svg.append("circle")
+            .attr("cx", x_scale(x))
+            .attr("cy", y_scale(y))
+            .attr("r", 2)
+            .style("fill", "purple");
+        //alert("plot " + String(x) + " " + String(y));
     }
 
 }

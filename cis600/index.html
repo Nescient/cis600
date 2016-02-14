@@ -5,15 +5,13 @@
     <meta charset="utf-8" />
     <title>CIS 600 Homework One - Henon Map</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
-    <script src="app.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
-    <script src="hw1.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="BaseTimer.js"></script>
     <script src="Hw1Controller.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
 </head>
-<body ng-app="">
+<body>
 
     <div>
         <nav>
@@ -22,58 +20,22 @@
         </nav>
         <div id="timediv"><p id="timep"></p></div>
     </div>
-    <!--<div ng-init="alert(d3.select('#graph'))"></div>
-    <div id="content" ng-include="'hw1.html'" onload="alert(d3.select('#graph'))"></div>
-    <div ng-init="alert(d3.select('#graph'))"></div>-->
-
-    <!--  <svg id="graph"></svg>  -->
-
-
-
-
-
-    <!--<div ng-controller="ExampleController">
-        <select ng-model="template" ng-options="t.name for t in templates">
-            <option value="">(blank)</option>
-        </select>
-        url of the template: <code>{{template.url}}</code>
-        <hr />
-        <div class="slide-animate-container">
-            <div class="slide-animate" ng-include="template.url"></div>
-        </div>
-    </div>-->
-
-
-
+    <main></main>
     <script>
+        var hw = "1";
         if (window.location.hash) {
-            var hash = window.location.hash.substring(1); //Puts hash in variable, and removes the # character
-            var hw = hash.substring(hash.search("hw") + 2);
-            load_hw(hw);
-        } else {
-            load_hw("1");
+            var index = window.location.hash.search("hw");
+            hw = window.location.hash.substring(index + 2);
         }
+        load_hw(hw);
         function load_hw(hw) {
             window.location.href = 'index.html#hw' + hw.toString();
-          //  alert(gAppController)
             switch (hw.toString()) {
                 case "1":
-                    //alert("case 1")
-                    var x = d3.select("#timediv");
-                    var el = document.getElementById('timediv');
-                    //alert(el)
-                    console.log(x)
-                  //  var s1 = document.getElementById('graph');
-                    var s1 = document.createElement("SVG");
-                    s1.setAttribute("id", "hw1svg");
-                    document.body.appendChild(s1);
-                   // alert(s1)
-                    console.log(x[0])
-                    console.log(s1)
                     var hw = new Hw1Controller("timep");
                     hw.start();
-                  //  var greeter = new Greeter(el, s1);
-                   // greeter.start();
+                    break;
+                case "2":
                     break;
             }
         }

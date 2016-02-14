@@ -11,16 +11,18 @@ var BaseTimer = (function () {
         return;
     };
     BaseTimer.prototype.start = function () {
-        this.timerToken = setInterval(function () { return function () {
-            this.updateTime();
-            this.dostuff();
-            $("#timep").text(new Date().toUTCString() + " oheayah");
-            return;
-        }; }, this.timerTimeout);
+        var _this = this;
+        this.timerToken = setInterval(function () { return _this.onTimerElapse(); }, this.timerTimeout);
         return;
     };
     BaseTimer.prototype.stop = function () {
-        clearTimeout(this.timerToken);
+        clearInterval(this.timerToken);
+        return;
+    };
+    BaseTimer.prototype.onTimerElapse = function () {
+        this.updateTime();
+        this.dostuff();
+        //$("#timep").text(new Date().toUTCString() + " oheayah");
         return;
     };
     return BaseTimer;

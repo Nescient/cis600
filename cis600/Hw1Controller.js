@@ -31,7 +31,7 @@ var Hw1Controller = (function (_super) {
         this.x = this.y = 0;
         this.a = 1.4;
         this.b = 0.3;
-        var svg = d3.select("body").append("svg");
+        var svg = d3.select("main").append("svg");
         svg.attr("width", 1000).attr("height", 1000);
         this.svg = svg;
         x_scale = d3.scale.linear()
@@ -42,12 +42,21 @@ var Hw1Controller = (function (_super) {
             .range([1000, 0]);
     }
     Hw1Controller.prototype.dostuff = function () {
-        plot(this.x, this.y);
+        this.plot(this.x, this.y);
         var x = 1 - this.a * (this.x * this.x) + this.y;
         var y = this.b * this.x;
         this.x = x;
         this.y = y;
         return;
+    };
+    Hw1Controller.prototype.plot = function (x, y) {
+        // var svg = d3.select("#graph");
+        this.svg.append("circle")
+            .attr("cx", x_scale(x))
+            .attr("cy", y_scale(y))
+            .attr("r", 2)
+            .style("fill", "purple");
+        //alert("plot " + String(x) + " " + String(y));
     };
     return Hw1Controller;
 })(BaseTimer);

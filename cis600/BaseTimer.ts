@@ -18,17 +18,19 @@ abstract class BaseTimer {
     }
 
     start() {
-        this.timerToken = setInterval(() => function () {
-           this.updateTime();
-        this.dostuff();
-            $("#timep").text(new Date().toUTCString() + " oheayah");
-            return;
-        }, this.timerTimeout);
+        this.timerToken = setInterval(() => this.onTimerElapse(), this.timerTimeout);
         return;
     }
 
     stop() {
-        clearTimeout(this.timerToken);
+        clearInterval(this.timerToken);
+        return;
+    }
+
+    onTimerElapse() {
+        this.updateTime();
+        this.dostuff();
+        //$("#timep").text(new Date().toUTCString() + " oheayah");
         return;
     }
 
