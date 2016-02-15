@@ -12,10 +12,10 @@ class Hw2Controller extends BaseTimer {
         //this.currentRow = Array.apply(null, { length: length }).map(Function.call, Math.random);
         for (var i: number = 0; i < length; ++i) {
             //this.currentRow.push(Math.random() < 0.5);
-            //this.currentRow.push((i == (length / 2)));
+            this.currentRow.push((i == (length / 2)));
             //this.currentRow.push((i % 2) == 0);
             //this.currentRow.push(true);
-            this.currentRow.push((i % 4) == 0);
+            //this.currentRow.push((i % 4) == 0);
         }
 
         var svg = d3.select("main").append("canvas");
