@@ -11,7 +11,11 @@ class Hw2Controller extends BaseTimer {
         // http://stackoverflow.com/a/20066663
         //this.currentRow = Array.apply(null, { length: length }).map(Function.call, Math.random);
         for (var i: number = 0; i < length; ++i) {
-            this.currentRow.push(Math.random() < 0.5);
+            //this.currentRow.push(Math.random() < 0.5);
+            //this.currentRow.push((i == (length / 2)));
+            //this.currentRow.push((i % 2) == 0);
+            //this.currentRow.push(true);
+            this.currentRow.push((i % 4) == 0);
         }
 
         var svg = d3.select("main").append("canvas");
@@ -129,7 +133,6 @@ class Hw2Controller extends BaseTimer {
             if (stats[i]) {
                 weights[i] = stats[i] / row;
                 entropy += weights[i] * (Math.log(weights[i]) / Math.log(2));
-                //weights[i] = weights[i].toFixed(2);
             }
             total_count += (stats[i] ? stats[i] : 0);
         }
@@ -140,9 +143,16 @@ class Hw2Controller extends BaseTimer {
 
         var fract_p = this.statsBox.append("p");
         statstr = "weights: [";
-        statstr += weights.toString()
+        for (var i: number = 0; i < weights.length; ++i) {
+            if (weights[i]) {
+                statstr += weights[i].toFixed(3);
+            }
+            if (i < weights.length - 1) {
+                statstr += ",";
+            }
+        }
         statstr += "]";
-        fract_p.text(weights);
+        fract_p.text(statstr);
 
         var entropy_p = this.statsBox.append("p");
         entropy_p.text("shannon's entropy: " + (0 - entropy));

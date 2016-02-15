@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8" />
-    <title>CIS 600 Homework One - Henon Map</title>
+    <title>CIS 600 Homework</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
@@ -30,13 +30,16 @@
         load_hw(hw);
         function load_hw(hw) {
             window.location.href = 'index.html#hw' + hw.toString();
+            document.title = "CIS 600 Homework " + hw.toString();
             switch (hw.toString()) {
                 case "1":
+                    document.title += " - Henon Map";
                     var hw = new Hw1Controller("timep");
                     hw.start();
                     break;
                 default:
                 case "2":
+                    document.title += " - Rule 110";
                     new Hw2Controller("timep").start();
                     break;
             }
