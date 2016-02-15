@@ -80,6 +80,8 @@ class Hw2Controller extends BaseTimer {
         var states: boolean[] = [false, true, true, true, false, true, true, false];
         var index: number = (p ? 4 : 0) + (c ? 2 : 0) + (n ? 1 : 0);
         return (index < states.length ? states[index] : false);
+
+        // or return this.poly(p?1:0,c?1:0,n?1:0) == 1;
     }
 
     graphRow(row: boolean[], yIndex: number) {
@@ -160,4 +162,19 @@ class Hw2Controller extends BaseTimer {
         return;
     }
 
+    // taken from Blair's ALife1Dim Java program
+    binarize(x: number): number {
+        var acc: number = 0;
+        var den: number = 0.5;
+        for (var k: number = 0; k < 14; ++k) {
+            if (acc + den <= x) { acc += den; }
+            den *= 0.5;
+        }
+        return acc;
+    }
+
+    // taken from Blair's ALife1Dim Java program
+    poly(u: number, x: number, v: number): number {
+        return this.binarize(0.5 - 0.5 * Math.cos(Math.PI * (x + v - x * v - u * x * v)));
+    }
 }
