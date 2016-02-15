@@ -26,25 +26,6 @@ class Hw2Controller extends BaseTimer {
         svg.attr("width", length * 2).attr("height", length * 2);
         svg.on("mousemove", () => this.onMouse());
 
-       // svg.on("mousemove",this.onMouseover);
-
-        //svg.on("mousemove", () => function() {
-        //    var d3this = d3.event;//.currentTarget;
-        //    console.log(this);
-        //    var canvas = d3.select(this);
-        //    var width = parseInt(canvas.style("width"));
-        //    var height = parseInt(canvas.style("height"));
-        //    var mouse_pos = d3.mouse(this);
-        //    var x = mouse_pos[0];
-        //    var y = mouse_pos[1];
-        //    console.log(x / 2 + " " + y / 2);
-        //    //console.log(this.data[Math.floor(y / 2)][Math.floor(x / 2)]);
-        //    //var mousePos = getMousePos(canvas, evt);
-        //    //var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-        //    //writeMessage(canvas, message);
-        //});
-
-
         this.svg = svg;
         this.graphRow(this.currentRow, 0);
 
@@ -56,24 +37,21 @@ class Hw2Controller extends BaseTimer {
         return;
     }
 
-    private onMouseover(d, i) {
-        //console.log(d3.select(d3.event.currentTarget));
-    }
-
     onMouse() {
         var width = parseInt(this.svg.style("width"));
         var height = parseInt(this.svg.style("height"));
         var mouse_event = d3.event["currentTarget"];
         if (mouse_event) {
             var mouse_pos = d3.mouse(mouse_event);
-            var x = mouse_pos[0];
-            var y = mouse_pos[1];
-            console.log(x / 2 + " " + y / 2);
+            var col_number = Math.floor(mouse_pos[0] / 2);
+            var row_number = Math.floor(mouse_pos[1] / 2);
+            var width = 3;
+
+            if (row_number < this.data.length) {
+                var stats = this.getStats(this.data, row_number, col_number, width);
+                this.printStats(row_number, col_number, width, stats);
+            }
         }
-            //console.log(this.data[Math.floor(y / 2)][Math.floor(x / 2)]);
-            //var mousePos = getMousePos(canvas, evt);
-            //var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-            //writeMessage(canvas, message);
         return;
     }
 
@@ -146,15 +124,15 @@ class Hw2Controller extends BaseTimer {
         //}
     }
 
-    getStats(data: boolean[][], rowIndex: number, colIndex: number, width: number): { [bitstring: number]: number; } {
-        var rval: { [bitstring: number]: number; } = {};
-        for (var i: number = 0; i < colIndex; ++i) {
+    getStats(data: boolean[][], rowIndex: number, colIndex: number, width: number): number[] {
+        var rval: number[] = Array(Math.pow(2, width));
+        for (var i: number = 0; i < rowIndex; ++i) {
             var row = data[i];
             var local_width = Math.min(Math.floor(width), row.length);
             var start_index = colIndex - Math.floor(local_width / 2);
-//            var max_left = local_width - max_right;
+            //            var max_left = local_width - max_right;
             var value = this.getNumber(row, start_index, local_width);
-            rval[value]++;
+            rval[value] = (rval[value] ? rval[value] + 1 : 1);
         }
         return rval;
     }
@@ -162,9 +140,15 @@ class Hw2Controller extends BaseTimer {
     getNumber(data: boolean[], start: number, length: number): number {
         var rval: number = 0;
         for (var i = start; i < (start + length); ++i) {
-            rval += (data[this.realMod(i, data.length)] ? (1 << (start - i)) : 0);
+            rval += (data[this.realMod(i, data.length)] ? (1 << (i - start)) : 0);
         }
         return rval;
+    }
+
+    printStats(row: number, col: number, width: number, stats: number[]) {
+        console.log("for row " + row + ", col " + col + " (length " + width + "): ");
+        console.log(stats);
+        return;
     }
 
 }

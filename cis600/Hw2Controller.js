@@ -26,22 +26,6 @@ var Hw2Controller = (function (_super) {
         var svg = d3.select("main").append("canvas");
         svg.attr("width", length * 2).attr("height", length * 2);
         svg.on("mousemove", function () { return _this.onMouse(); });
-        // svg.on("mousemove",this.onMouseover);
-        //svg.on("mousemove", () => function() {
-        //    var d3this = d3.event;//.currentTarget;
-        //    console.log(this);
-        //    var canvas = d3.select(this);
-        //    var width = parseInt(canvas.style("width"));
-        //    var height = parseInt(canvas.style("height"));
-        //    var mouse_pos = d3.mouse(this);
-        //    var x = mouse_pos[0];
-        //    var y = mouse_pos[1];
-        //    console.log(x / 2 + " " + y / 2);
-        //    //console.log(this.data[Math.floor(y / 2)][Math.floor(x / 2)]);
-        //    //var mousePos = getMousePos(canvas, evt);
-        //    //var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-        //    //writeMessage(canvas, message);
-        //});
         this.svg = svg;
         this.graphRow(this.currentRow, 0);
         var msg_box = d3.select("main").append("div");
@@ -51,23 +35,20 @@ var Hw2Controller = (function (_super) {
         //msgBox.style("display:line");
         return;
     }
-    Hw2Controller.prototype.onMouseover = function (d, i) {
-        //console.log(d3.select(d3.event.currentTarget));
-    };
     Hw2Controller.prototype.onMouse = function () {
         var width = parseInt(this.svg.style("width"));
         var height = parseInt(this.svg.style("height"));
         var mouse_event = d3.event["currentTarget"];
         if (mouse_event) {
             var mouse_pos = d3.mouse(mouse_event);
-            var x = mouse_pos[0];
-            var y = mouse_pos[1];
-            console.log(x / 2 + " " + y / 2);
+            var col_number = Math.floor(mouse_pos[0] / 2);
+            var row_number = Math.floor(mouse_pos[1] / 2);
+            var width = 3;
+            if (row_number < this.data.length) {
+                var stats = this.getStats(this.data, row_number, col_number, width);
+                this.printStats(row_number, col_number, width, stats);
+            }
         }
-        //console.log(this.data[Math.floor(y / 2)][Math.floor(x / 2)]);
-        //var mousePos = getMousePos(canvas, evt);
-        //var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
-        //writeMessage(canvas, message);
         return;
     };
     Hw2Controller.prototype.dostuff = function () {
@@ -132,23 +113,28 @@ var Hw2Controller = (function (_super) {
         //}
     };
     Hw2Controller.prototype.getStats = function (data, rowIndex, colIndex, width) {
-        var rval = {};
-        for (var i = 0; i < colIndex; ++i) {
+        var rval = Array(Math.pow(2, width));
+        for (var i = 0; i < rowIndex; ++i) {
             var row = data[i];
             var local_width = Math.min(Math.floor(width), row.length);
             var start_index = colIndex - Math.floor(local_width / 2);
             //            var max_left = local_width - max_right;
             var value = this.getNumber(row, start_index, local_width);
-            rval[value]++;
+            rval[value] = (rval[value] ? rval[value] + 1 : 1);
         }
         return rval;
     };
     Hw2Controller.prototype.getNumber = function (data, start, length) {
         var rval = 0;
         for (var i = start; i < (start + length); ++i) {
-            rval += (data[this.realMod(i, data.length)] ? (1 << (start - i)) : 0);
+            rval += (data[this.realMod(i, data.length)] ? (1 << (i - start)) : 0);
         }
         return rval;
+    };
+    Hw2Controller.prototype.printStats = function (row, col, width, stats) {
+        console.log("for row " + row + ", col " + col + " (length " + width + "): ");
+        console.log(stats);
+        return;
     };
     return Hw2Controller;
 })(BaseTimer);
