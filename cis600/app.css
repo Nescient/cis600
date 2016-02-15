@@ -17,5 +17,5 @@ span {
     top: 1px;
     left: 825px;
     background-color: white;
-    width: 25%;
+    max-width: 25%;
 }

@@ -2,10 +2,9 @@
 
 class Hw2Controller extends BaseTimer {
     svg: any;
-    stats: any;
+    statsBox: any;
     currentRow: boolean[] = [];
     data: boolean[][] = [];
-    //xScaleMouse: any;
 
     constructor(elementId: string) {
         super(elementId);
@@ -15,25 +14,15 @@ class Hw2Controller extends BaseTimer {
             this.currentRow.push(Math.random() < 0.5);
         }
 
-        //this.xScaleMouse = d3.scale.linear()
-        //    .domain([0, length * 2])
-        //    .range([0, this.currentRow.length]);
-        //this.yScale = d3.scale.linear()
-        //    .domain([-10, 10])
-        //    .range([1000, 0]);
-
         var svg = d3.select("main").append("canvas");
-        svg.attr("width", length * 2).attr("height", length * 2);
+        svg.attr("width", length * 2).attr("height", length * 20);
         svg.on("mousemove", () => this.onMouse());
 
         this.svg = svg;
         this.graphRow(this.currentRow, 0);
 
-        var msg_box = d3.select("main").append("div");
-        msg_box.attr("id", "hw2stats");
-        this.stats = msg_box.append("p");
-        //msgBox.text("hellow wolrld and sutff");
-        //msgBox.style("display:line");
+        this.statsBox = d3.select("main").append("div");
+        this.statsBox.attr("id", "hw2stats");
         return;
     }
 
@@ -95,13 +84,6 @@ class Hw2Controller extends BaseTimer {
         var y_index = yIndex * rec_width;
         var context = this.svg.node().getContext("2d");
 
-        //var total_height = parseInt(this.svg.style("height"));
-        //if (total_height < y_index) {
-        //    var svg = d3.select("main").append("canvas");
-        //    svg.attr("width", total_width).attr("height", y_index * 2);
-        //    this.svg = svg;
-        //}
-
         row.forEach(function (d, i) {
             context.beginPath();
             context.rect(i * rec_width, y_index, rec_width, rec_width);
@@ -111,17 +93,6 @@ class Hw2Controller extends BaseTimer {
             }
             context.closePath();
         });
-
-        //for (var i: number = 0; i < row.length; ++i) {
-        //    this.svg.append("rect").attr({
-        //        x: i * rec_width,
-        //        y: y_index,
-        //        width: rec_width,
-        //        height: rec_width,
-        //        "fill": "#000",
-        //        "fill-opacity": row[i] ? 1 : 0
-        //    });
-        //}
     }
 
     getStats(data: boolean[][], rowIndex: number, colIndex: number, width: number): number[] {
@@ -130,7 +101,6 @@ class Hw2Controller extends BaseTimer {
             var row = data[i];
             var local_width = Math.min(Math.floor(width), row.length);
             var start_index = colIndex - Math.floor(local_width / 2);
-            //            var max_left = local_width - max_right;
             var value = this.getNumber(row, start_index, local_width);
             rval[value] = (rval[value] ? rval[value] + 1 : 1);
         }
@@ -146,8 +116,37 @@ class Hw2Controller extends BaseTimer {
     }
 
     printStats(row: number, col: number, width: number, stats: number[]) {
-        console.log("for row " + row + ", col " + col + " (length " + width + "): ");
-        console.log(stats);
+        this.statsBox.selectAll("p").remove();
+        var count_p = this.statsBox.append("p");
+
+        var statstr: string = "count for row " + row + ", col " + col + " (length " + width + "): ";
+        count_p.text(statstr + stats.toString());
+
+        var total_count: number = 0;
+        var weights: number[] = Array(stats.length);
+        var entropy: number = 0;
+        for (var i: number = 0; i < stats.length; ++i) {
+            if (stats[i]) {
+                weights[i] = stats[i] / row;
+                entropy += weights[i] * (Math.log(weights[i]) / Math.log(2));
+                //weights[i] = weights[i].toFixed(2);
+            }
+            total_count += (stats[i] ? stats[i] : 0);
+        }
+        if (total_count != row) {
+            this.statsBox.append("p").text("total count != row:  " + total_count.toString() + " != " + row.toString());
+            alert("totalcount != row");
+        }
+
+        var fract_p = this.statsBox.append("p");
+        statstr = "weights: [";
+        statstr += weights.toString()
+        statstr += "]";
+        fract_p.text(weights);
+
+        var entropy_p = this.statsBox.append("p");
+        entropy_p.text("shannon's entropy: " + (0 - entropy));
+
         return;
     }
 
