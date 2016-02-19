@@ -19,3 +19,16 @@ span {
     background-color: white;
     max-width: 25%;
 }
+
+#hw3stats {
+    position: fixed;
+    top: 1px;
+    left: 825px;
+    background-color: white;
+    max-width: 25%;
+}
+
+    #hw3stats p {
+        height: 200px;
+        overflow-y: scroll;
+    }

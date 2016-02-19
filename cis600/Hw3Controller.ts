@@ -20,15 +20,36 @@ class Hw3Controller extends BaseTimer {
             //this.currentRow.push((i % 4) == 0);
         }
 
+        console.log("a is " + this.a.toString() + ", b is " + this.b.toString());
+        console.log(this.currentRow);
+
         var svg = d3.select("main").append("canvas");
         svg.attr("width", length * 2).attr("height", length * 20);
-        //svg.on("mousemove", () => this.onMouse());
+        svg.on("mousemove", () => this.onMouse());
 
         this.svg = svg;
         this.graphRow(this.currentRow, 0);
 
-        //this.statsBox = d3.select("main").append("div");
-        //this.statsBox.attr("id", "hw2stats");
+        this.statsBox = d3.select("main").append("div");
+        this.statsBox.attr("id", "hw3stats");
+        return;
+    }
+
+    onMouse() {
+        var width = parseInt(this.svg.style("width"));
+        var height = parseInt(this.svg.style("height"));
+        var mouse_event = d3.event["currentTarget"];
+        if (mouse_event) {
+            var mouse_pos = d3.mouse(mouse_event);
+            var col_number = Math.floor(mouse_pos[0] / 2);
+            var row_number = Math.floor(mouse_pos[1] / 2);
+            var width = 3;
+
+            if (row_number < this.data.length) {
+                var stats = this.getStats(this.data, row_number, col_number, width);
+                this.printStats(row_number, col_number, width, stats);
+            }
+        }
         return;
     }
 
@@ -68,6 +89,12 @@ class Hw3Controller extends BaseTimer {
         return (0.5 - 0.5 * Math.cos(Math.PI * (this.a + (this.a - this.b) * v + this.b * u * v - 2 * u * x * v)));
     }
 
+    toHexString(val: number): string {
+        var hexstring: string = Math.round(val * 0xFFFFFF).toString(16);
+        hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
+        return hexstring;
+    }
+
     graphRow(row: number[], yIndex: number) {
         var total_width = parseInt(this.svg.style("width"));
         var rec_width = total_width / row.length;
@@ -75,11 +102,9 @@ class Hw3Controller extends BaseTimer {
         var context = this.svg.node().getContext("2d");
 
         row.forEach(function (d, i) {
-            var hexstring: string = Math.round(row[i] * 0xFFFFFF).toString(16);
-            hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
             context.beginPath();
             context.rect(i * rec_width, y_index, rec_width, rec_width);
-            context.fillStyle = "#" + hexstring;
+            context.fillStyle = "#" + Hw3Controller.prototype.toHexString(row[i]);
             context.fill();
             //if (row[i] == 0 && context.fillStyle != "#000000") {
             //    var stop = true;
@@ -87,5 +112,72 @@ class Hw3Controller extends BaseTimer {
             //console.log(row[i].toString() + " -> " + context.fillStyle);
             context.closePath();
         });
+    }
+
+    getStats(data: number[][], rowIndex: number, colIndex: number, width: number): { [color: string]: number } {
+        var rval: { [color: string]: number } = {};
+        for (var i: number = 0; i < rowIndex; ++i) {
+            var row = data[i];
+            var local_width = Math.min(Math.floor(width), row.length);
+            var start_index = colIndex - Math.floor(local_width / 2);
+            var value = this.getString(row, start_index, local_width);
+            rval[value] = (rval[value] ? rval[value] + 1 : 1);
+        }
+        return rval;
+    }
+
+    getString(data: number[], start: number, length: number): string {
+        var rval: string = "";
+        for (var i = start; i < (start + length); ++i) {
+            rval += this.toHexString(data[this.realMod(i, data.length)]);
+        }
+        return rval;
+    }
+
+    printStats(row: number, col: number, width: number, stats: { [color: string]: number }) {
+        this.statsBox.selectAll("p").remove();
+
+        var info_p = this.statsBox.append("p");
+        var statstr: string = "row " + row + ", col " + col + " (length " + width + ") with a=" + this.a.toString() + " and b=" + this.b.toString();
+        info_p.text(statstr);
+
+        var count_p = this.statsBox.append("p");
+        count_p.attr("height", 200);
+        count_p.style("overflow-y", "scroll");
+        count_p.text("count: " + JSON.stringify(stats, null, 2));
+
+        var total_count: number = 0;
+        var weights: { [color: string]: number } = {};
+        var entropy: number = 0;
+
+        var valid_strings = Object.keys(stats);
+        for (var i: number = 0; i < valid_strings.length; ++i) {
+            var count = stats[valid_strings[i]];
+            weights[i] = count / row;
+            entropy += weights[i] * (Math.log(weights[i]) / Math.log(2));
+            total_count += count;
+        }
+        if (total_count != row) {
+            this.statsBox.append("p").text("total count != row:  " + total_count.toString() + " != " + row.toString());
+            alert("totalcount != row");
+        }
+
+        var fract_p = this.statsBox.append("p");
+        statstr = "weights: [";
+        valid_strings = Object.keys(weights);
+        for (var i: number = 0; i < valid_strings.length; ++i) {
+            var weight = weights[valid_strings[i]];
+            statstr += weight.toFixed(3);
+            if (i < valid_strings.length - 1) {
+                statstr += ",";
+            }
+        }
+        statstr += "]";
+        fract_p.text(statstr);
+
+        var entropy_p = this.statsBox.append("p");
+        entropy_p.text("shannon's entropy: " + (0 - entropy));
+
+        return;
     }
 }
