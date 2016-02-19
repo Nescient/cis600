@@ -123,17 +123,33 @@ var Hw3Controller = (function (_super) {
         var statstr = "row " + row + ", col " + col + " (length " + width + ") with a=" + this.a.toString() + " and b=" + this.b.toString();
         info_p.text(statstr);
         var count_p = this.statsBox.append("p");
-        count_p.attr("height", 200);
-        count_p.style("overflow-y", "scroll");
-        count_p.text("count: " + JSON.stringify(stats, null, 2));
+        //count_p.text("count: " + JSON.stringify(stats, null, 2));
+        var count_array = [];
+        for (var c in stats) {
+            count_array.push([c, stats[c]]);
+        }
+        count_array.sort(function (a, b) {
+            return a[1] - b[1];
+        });
+        count_array.reverse();
+        statstr = "count: { ";
+        for (var i = 0; i < count_array.length; ++i) {
+            statstr += '"' + count_array[i][0].toString() + '": ' + count_array[i][1].toString();
+            if (i < count_array.length - 1) {
+                statstr += ", ";
+            }
+        }
+        statstr += " }";
+        count_p.text(statstr);
         var total_count = 0;
         var weights = {};
         var entropy = 0;
         var valid_strings = Object.keys(stats);
         for (var i = 0; i < valid_strings.length; ++i) {
             var count = stats[valid_strings[i]];
-            weights[i] = count / row;
-            entropy += weights[i] * (Math.log(weights[i]) / Math.log(2));
+            var weight = count / row;
+            weights[valid_strings[i]] = weight;
+            entropy += weight * (Math.log(weight) / Math.log(2));
             total_count += count;
         }
         if (total_count != row) {
@@ -151,7 +167,13 @@ var Hw3Controller = (function (_super) {
             }
         }
         statstr += "]";
-        fract_p.text(statstr);
+        //fract_p.text(statstr);
+        fract_p.text("weights: " + JSON.stringify(weights, function (key, value) {
+            if (key) {
+                return value.toFixed(3);
+            }
+            return value;
+        }, 2));
         var entropy_p = this.statsBox.append("p");
         entropy_p.text("shannon's entropy: " + (0 - entropy));
         return;
