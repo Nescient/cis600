@@ -32,7 +32,8 @@ span {
     max-width: 600px;
 }
 
-    #hw3stats p {
-        height: 200px;
+    #hw3stats p.long {
+        height: 40%;
+        max-height: 400px;
         overflow-y: scroll;
     }

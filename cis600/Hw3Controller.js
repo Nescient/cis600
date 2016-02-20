@@ -122,7 +122,9 @@ var Hw3Controller = (function (_super) {
         var info_p = this.statsBox.append("p");
         var statstr = "row " + row + ", col " + col + " (length " + width + ") with a=" + this.a.toString() + " and b=" + this.b.toString();
         info_p.text(statstr);
+        var entropy_p = this.statsBox.append("p");
         var count_p = this.statsBox.append("p");
+        count_p.attr("class", "long");
         //count_p.text("count: " + JSON.stringify(stats, null, 2));
         var count_array = [];
         for (var c in stats) {
@@ -157,6 +159,7 @@ var Hw3Controller = (function (_super) {
             alert("totalcount != row");
         }
         var fract_p = this.statsBox.append("p");
+        fract_p.attr("class", "long");
         statstr = "weights: [";
         valid_strings = Object.keys(weights);
         for (var i = 0; i < valid_strings.length; ++i) {
@@ -174,7 +177,8 @@ var Hw3Controller = (function (_super) {
             }
             return value;
         }, 2));
-        var entropy_p = this.statsBox.append("p");
+        //info_p.text(info_p.text() + "     ----------     " + "shannon's entropy: " + (0 - entropy));
+        //    info_p.
         entropy_p.text("shannon's entropy: " + (0 - entropy));
         return;
     };
