@@ -5,8 +5,27 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var length = 400;
 var CellularAutomaton = (function () {
-    function CellularAutomaton() {
+    function CellularAutomaton(a, b, row) {
+        this.a = 0;
+        this.b = 0;
+        this.counts = [];
+        this.currentRow = [];
+        this.a = a;
+        this.b = b;
+        this.currentRow = row;
+        return;
     }
+    CellularAutomaton.prototype.getEntropy = function () {
+        //var valid_strings = Object.keys(stats);
+        //for (var i: number = 0; i < valid_strings.length; ++i) {
+        //    var count = stats[valid_strings[i]];
+        //    var weight = count / row;
+        //    weights[valid_strings[i]] = weight;
+        //    entropy += weight * (Math.log(weight) / Math.log(2));
+        //    total_count += count;
+        //}
+        return Math.random();
+    };
     return CellularAutomaton;
 })();
 var Hw3Controllerv2 = (function (_super) {
@@ -24,7 +43,9 @@ var Hw3Controllerv2 = (function (_super) {
         }
         for (var b = 0; b <= 1; b += this.increment) {
             for (var a = 0; a <= 1; a += this.increment) {
-                this.data.push({ a: a, b: b, data: [data] });
+                var ca = new CellularAutomaton(a, b, data);
+                this.countRowByThree(ca.currentRow, ca.counts);
+                this.data.push(ca);
             }
         }
         var svg = d3.select("main").append("svg");
@@ -49,18 +70,17 @@ var Hw3Controllerv2 = (function (_super) {
     Hw3Controllerv2.prototype.dostuff = function () {
         var heat_data = [];
         for (var i = 0; i < this.data.length; ++i) {
-            var row = this.data[i].data[this.data[i].data.length - 1];
-            this.data[i].data.push(this.nextRow(this.data[i].a, this.data[i].b, row));
-            // somehow get a single shannons entropy for all of data[i]
-            // this will be heat map x,y
-            var entropy = Math.random();
+            var ca = this.data[i];
+            ca.currentRow = this.nextRow(ca.a, ca.b, ca.currentRow);
+            this.countRowByThree(ca.currentRow, ca.counts);
+            var entropy = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
             var height = parseInt(this.svg.style("height"));
             var num_boxes = (1 / this.increment) + 1;
             heat_data.push({
                 value: entropy,
-                x: this.data[i].a / this.increment,
-                y: this.data[i].b / this.increment,
+                x: ca.a / this.increment,
+                y: ca.b / this.increment,
                 color: "#" + this.toHexString(entropy)
             });
         }
@@ -135,23 +155,13 @@ var Hw3Controllerv2 = (function (_super) {
             context.closePath();
         });
     };
-    Hw3Controllerv2.prototype.getStats = function (data, rowIndex, colIndex, width) {
-        var rval = {};
-        for (var i = 0; i < rowIndex; ++i) {
-            var row = data[i];
-            var local_width = Math.min(Math.floor(width), row.length);
-            var start_index = colIndex - Math.floor(local_width / 2);
-            var value = this.getString(row, start_index, local_width);
-            rval[value] = (rval[value] ? rval[value] + 1 : 1);
+    Hw3Controllerv2.prototype.countRowByThree = function (row, counts) {
+        for (var i = 0; i < row.length; ++i) {
+            var value = this.toHexString(row[this.realMod(i, row.length)]) +
+                this.toHexString(row[this.realMod(i + 1, row.length)]) +
+                this.toHexString(row[this.realMod(i + 2, row.length)]);
+            counts[value] = (counts[value] ? counts[value] + 1 : 1);
         }
-        return rval;
-    };
-    Hw3Controllerv2.prototype.getString = function (data, start, length) {
-        var rval = "";
-        for (var i = start; i < (start + length); ++i) {
-            rval += this.toHexString(data[this.realMod(i, data.length)]);
-        }
-        return rval;
     };
     Hw3Controllerv2.prototype.printStats = function (row, col, width, stats) {
         //this.statsBox.selectAll("p").remove();

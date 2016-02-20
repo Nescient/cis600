@@ -1,9 +1,29 @@
 ﻿var length = 400;
 
 class CellularAutomaton {
-    a: number;
-    b: number;
-    data: number[][];
+    a: number = 0;
+    b: number = 0;
+    counts: { color: string, number }[] = [];
+    currentRow: number[] = [];
+
+    constructor(a: number, b: number, row: number[]) {
+        this.a = a;
+        this.b = b;
+        this.currentRow = row;
+        return;
+    }
+
+    getEntropy(): number {
+        //var valid_strings = Object.keys(stats);
+        //for (var i: number = 0; i < valid_strings.length; ++i) {
+        //    var count = stats[valid_strings[i]];
+        //    var weight = count / row;
+        //    weights[valid_strings[i]] = weight;
+        //    entropy += weight * (Math.log(weight) / Math.log(2));
+        //    total_count += count;
+        //}
+        return Math.random();
+    }
 }
 
 class Hw3Controllerv2 extends BaseTimer {
@@ -22,7 +42,9 @@ class Hw3Controllerv2 extends BaseTimer {
         }
         for (var b: number = 0; b <= 1; b += this.increment) {
             for (var a: number = 0; a <= 1; a += this.increment) {
-                this.data.push({ a: a, b: b, data: [data] });
+                var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
+                this.countRowByThree(ca.currentRow, ca.counts);
+                this.data.push(ca);
             }
         }
 
@@ -57,20 +79,18 @@ class Hw3Controllerv2 extends BaseTimer {
     dostuff() {
         var heat_data: { value: number, x: number, y: number, color: string }[] = [];
         for (var i: number = 0; i < this.data.length; ++i) {
-            var row: number[] = this.data[i].data[this.data[i].data.length - 1];
-            this.data[i].data.push(this.nextRow(this.data[i].a, this.data[i].b, row));
+            var ca: CellularAutomaton = this.data[i];
+            ca.currentRow = this.nextRow(ca.a, ca.b, ca.currentRow);
+            this.countRowByThree(ca.currentRow, ca.counts);
 
-            // somehow get a single shannons entropy for all of data[i]
-            // this will be heat map x,y
-
-            var entropy: number = Math.random();
+            var entropy: number = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
             var height = parseInt(this.svg.style("height"));
             var num_boxes = (1 / this.increment) + 1;
             heat_data.push({
                 value: entropy,
-                x: this.data[i].a / this.increment,
-                y: this.data[i].b / this.increment,
+                x: ca.a / this.increment,
+                y: ca.b / this.increment,
                 color: "#" + this.toHexString(entropy)
             });
         }
@@ -154,24 +174,14 @@ class Hw3Controllerv2 extends BaseTimer {
         });
     }
 
-    getStats(data: number[][], rowIndex: number, colIndex: number, width: number): { [color: string]: number } {
-        var rval: { [color: string]: number } = {};
-        for (var i: number = 0; i < rowIndex; ++i) {
-            var row = data[i];
-            var local_width = Math.min(Math.floor(width), row.length);
-            var start_index = colIndex - Math.floor(local_width / 2);
-            var value = this.getString(row, start_index, local_width);
-            rval[value] = (rval[value] ? rval[value] + 1 : 1);
+    countRowByThree(row: number[], counts: { color: string, number }[]) {
+        for (var i: number = 0; i < row.length; ++i) {
+            var value: string =
+                this.toHexString(row[this.realMod(i, row.length)]) +
+                this.toHexString(row[this.realMod(i + 1, row.length)]) +
+                this.toHexString(row[this.realMod(i + 2, row.length)]);
+            counts[value] = (counts[value] ? counts[value] + 1 : 1);
         }
-        return rval;
-    }
-
-    getString(data: number[], start: number, length: number): string {
-        var rval: string = "";
-        for (var i = start; i < (start + length); ++i) {
-            rval += this.toHexString(data[this.realMod(i, data.length)]);
-        }
-        return rval;
     }
 
     printStats(row: number, col: number, width: number, stats: { [color: string]: number }) {
