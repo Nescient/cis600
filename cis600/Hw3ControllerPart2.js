@@ -14,6 +14,31 @@ function gToHexString(val) {
     hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
     return hexstring;
 }
+var ColumnCount = (function () {
+    function ColumnCount(column) {
+        this.column = 0;
+        this.counts = [];
+        this.column = column;
+        return;
+    }
+    ColumnCount.prototype.addCount = function (str) {
+        this.counts[str] = (this.counts[str] ? this.counts[str] + 1 : 1);
+        return;
+    };
+    ColumnCount.prototype.getEntropy = function (rowCount) {
+        var entropy = 0;
+        var valid_strings = Object.keys(this.counts);
+        var total_count = 0;
+        for (var i = 0; i < valid_strings.length; ++i) {
+            var count = this.counts[valid_strings[i]];
+            var weight = count / rowCount;
+            entropy += weight * (Math.log(weight) / Math.log(2));
+            total_count += count;
+        }
+        return 0 - entropy;
+    };
+    return ColumnCount;
+})();
 var CellularAutomaton = (function () {
     function CellularAutomaton(a, b, row) {
         this.a = 0;
@@ -26,6 +51,11 @@ var CellularAutomaton = (function () {
         this.currentRow = row;
         if (this.currentRow) {
             this.rowCount = 1;
+            this.counts = Array(this.currentRow.length);
+            for (var i = 0; i < this.counts.length; ++i) {
+                this.counts[i] = new ColumnCount(i);
+            }
+            this.updateCounts();
         }
         return;
     }
@@ -35,6 +65,7 @@ var CellularAutomaton = (function () {
     CellularAutomaton.prototype.setNextRow = function (row) {
         this.currentRow = row;
         ++this.rowCount;
+        this.updateCounts();
         return;
     };
     CellularAutomaton.prototype.updateCounts = function () {
@@ -42,24 +73,18 @@ var CellularAutomaton = (function () {
             var value = gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
-            this.counts[value] = (this.counts[value] ? this.counts[value] + 1 : 1);
+            this.counts[i].addCount(value);
         }
     };
     CellularAutomaton.prototype.getEntropy = function () {
-        var entropy = 0;
-        var valid_strings = Object.keys(this.counts);
-        var total_count = 0;
-        for (var i = 0; i < valid_strings.length; ++i) {
-            var count = this.counts[valid_strings[i]];
-            var weight = count / this.rowCount;
-            entropy += weight * (Math.log(weight) / Math.log(2));
-            total_count += count;
+        var entropy = this.counts[0].getEntropy(this.rowCount);
+        for (var i = 1; i < this.counts.length; ++i) {
+            var new_entropy = this.counts[i].getEntropy(this.rowCount);
+            if (new_entropy < entropy) {
+                entropy = new_entropy;
+            }
         }
-        if (total_count != (this.rowCount * this.currentRow.length)) {
-            alert("total count != row count : " + total_count.toString() +
-                " != " + (this.rowCount * this.currentRow.length).toString());
-        }
-        return 0 - entropy;
+        return entropy;
     };
     return CellularAutomaton;
 })();
@@ -79,7 +104,6 @@ var Hw3Controllerv2 = (function (_super) {
         for (var b = 0; b <= 1; b += this.increment) {
             for (var a = 0; a <= 1; a += this.increment) {
                 var ca = new CellularAutomaton(a, b, data);
-                this.countRowByThree(ca.getCurrentRow(), ca.counts);
                 this.data.push(ca);
             }
         }
@@ -107,7 +131,6 @@ var Hw3Controllerv2 = (function (_super) {
         for (var i = 0; i < this.data.length; ++i) {
             var ca = this.data[i];
             ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
-            this.countRowByThree(ca.getCurrentRow(), ca.counts);
             var entropy = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
             var height = parseInt(this.svg.style("height"));

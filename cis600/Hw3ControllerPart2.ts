@@ -79,25 +79,19 @@ class CellularAutomaton {
                 gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
-            this.counts[value] = (this.counts[value] ? this.counts[value] + 1 : 1);
+            this.counts[i].addCount(value);
         }
     }
 
     getEntropy(): number {
-        var entropy: number = 0;
-        var valid_strings = Object.keys(this.counts);
-        var total_count: number = 0;
-        for (var i: number = 0; i < valid_strings.length; ++i) {
-            var count = this.counts[valid_strings[i]];
-            var weight = count / this.rowCount;
-            entropy += weight * (Math.log(weight) / Math.log(2));
-            total_count += count;
+        var entropy: number = this.counts[0].getEntropy(this.rowCount);
+        for (var i: number = 1; i < this.counts.length; ++i) {
+            var new_entropy: number = this.counts[i].getEntropy(this.rowCount);
+            if (new_entropy < entropy) {
+                entropy = new_entropy;
+            }
         }
-        if (total_count != (this.rowCount * this.currentRow.length)) {
-            alert("total count != row count : " + total_count.toString() +
-                " != " + (this.rowCount * this.currentRow.length).toString());
-        }
-        return 0 - entropy;
+        return entropy;
     }
 }
 
@@ -118,7 +112,6 @@ class Hw3Controllerv2 extends BaseTimer {
         for (var b: number = 0; b <= 1; b += this.increment) {
             for (var a: number = 0; a <= 1; a += this.increment) {
                 var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-                this.countRowByThree(ca.getCurrentRow(), ca.counts);
                 this.data.push(ca);
             }
         }
@@ -156,7 +149,6 @@ class Hw3Controllerv2 extends BaseTimer {
         for (var i: number = 0; i < this.data.length; ++i) {
             var ca: CellularAutomaton = this.data[i];
             ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
-            this.countRowByThree(ca.getCurrentRow(), ca.counts);
 
             var entropy: number = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
