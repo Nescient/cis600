@@ -41,8 +41,8 @@ class ColumnCount {
 }
 
 class CellularAutomaton {
-    a: number = 0;
-    b: number = 0;
+    private a: number = 0;
+    private b: number = 0;
     private counts: ColumnCount[] = [];
     private currentRow: number[] = [];
     private rowCount: number = 0;
@@ -62,18 +62,45 @@ class CellularAutomaton {
         return;
     }
 
+    public getA(): number {
+        return this.a;
+    }
+
+    public getB(): number {
+        return this.a;
+    }
+
     getCurrentRow(): number[] {
         return this.currentRow;
     }
 
-    setNextRow(row: number[]) {
+    public makeNewRow() {
+        var len: number = this.currentRow.length;
+        var new_row: number[] = Array(len);
+        for (var i: number = 0; i < len; ++i) {
+            var previous: number = this.currentRow[gRealMod(i - 1, len)];
+            var current: number = this.currentRow[gRealMod(i, len)];
+            var next: number = this.currentRow[gRealMod(i + 1, len)];
+            new_row[i] = this.poly(this.a, this.b, previous, current, next);
+            if (new_row[i] > 1) { alert(new_row[i]); }
+            else if (new_row[i] < 0) { alert(new_row[i]); }
+        }
+        return this.setNextRow(new_row);
+    }
+
+    // taken from Blair's ALife1Dim Java program
+    private poly(a: number, b: number, u: number, x: number, v: number): number {
+        return (0.5 - 0.5 * Math.cos(Math.PI * (a + (a - b) * v + b * u * v - 2 * u * x * v)));
+    }
+
+    private setNextRow(row: number[]) {
         this.currentRow = row;
         ++this.rowCount;
         this.updateCounts();
         return;
     }
 
-    updateCounts() {
+    private updateCounts() {
         for (var i: number = 0; i < this.currentRow.length; ++i) {
             var value: string =
                 gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
@@ -83,7 +110,7 @@ class CellularAutomaton {
         }
     }
 
-    getEntropy(): number {
+    public getEntropy(): number {
         var entropy: number = this.counts[0].getEntropy(this.rowCount);
         for (var i: number = 1; i < this.counts.length; ++i) {
             var new_entropy: number = this.counts[i].getEntropy(this.rowCount);
@@ -148,7 +175,7 @@ class Hw3Controllerv2 extends BaseTimer {
         var heat_data: { value: number, x: number, y: number, color: string }[] = [];
         for (var i: number = 0; i < this.data.length; ++i) {
             var ca: CellularAutomaton = this.data[i];
-            ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
+            ca.makeNewRow();
 
             var entropy: number = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
@@ -156,8 +183,8 @@ class Hw3Controllerv2 extends BaseTimer {
             var num_boxes = (1 / this.increment) + 1;
             heat_data.push({
                 value: entropy,
-                x: ca.a / this.increment,
-                y: ca.b / this.increment,
+                x: ca.getA() / this.increment,
+                y: ca.getB() / this.increment,
                 color: "#" + this.toHexString(entropy)
             });
         }

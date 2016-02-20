@@ -59,8 +59,35 @@ var CellularAutomaton = (function () {
         }
         return;
     }
+    CellularAutomaton.prototype.getA = function () {
+        return this.a;
+    };
+    CellularAutomaton.prototype.getB = function () {
+        return this.a;
+    };
     CellularAutomaton.prototype.getCurrentRow = function () {
         return this.currentRow;
+    };
+    CellularAutomaton.prototype.makeNewRow = function () {
+        var len = this.currentRow.length;
+        var new_row = Array(len);
+        for (var i = 0; i < len; ++i) {
+            var previous = this.currentRow[gRealMod(i - 1, len)];
+            var current = this.currentRow[gRealMod(i, len)];
+            var next = this.currentRow[gRealMod(i + 1, len)];
+            new_row[i] = this.poly(this.a, this.b, previous, current, next);
+            if (new_row[i] > 1) {
+                alert(new_row[i]);
+            }
+            else if (new_row[i] < 0) {
+                alert(new_row[i]);
+            }
+        }
+        return this.setNextRow(new_row);
+    };
+    // taken from Blair's ALife1Dim Java program
+    CellularAutomaton.prototype.poly = function (a, b, u, x, v) {
+        return (0.5 - 0.5 * Math.cos(Math.PI * (a + (a - b) * v + b * u * v - 2 * u * x * v)));
     };
     CellularAutomaton.prototype.setNextRow = function (row) {
         this.currentRow = row;
@@ -130,15 +157,15 @@ var Hw3Controllerv2 = (function (_super) {
         var heat_data = [];
         for (var i = 0; i < this.data.length; ++i) {
             var ca = this.data[i];
-            ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
+            ca.makeNewRow();
             var entropy = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
             var height = parseInt(this.svg.style("height"));
             var num_boxes = (1 / this.increment) + 1;
             heat_data.push({
                 value: entropy,
-                x: ca.a / this.increment,
-                y: ca.b / this.increment,
+                x: ca.getA() / this.increment,
+                y: ca.getB() / this.increment,
                 color: "#" + this.toHexString(entropy)
             });
         }
