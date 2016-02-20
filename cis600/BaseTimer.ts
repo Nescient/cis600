@@ -7,7 +7,7 @@ abstract class BaseTimer {
 
     constructor(elementId: string) {
         this.timeId = elementId;
-        this.timerTimeout = 50;
+        this.timerTimeout = 10;
         this.updateTime();
         return;
     }

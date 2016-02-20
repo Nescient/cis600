@@ -1,4 +1,4 @@
-﻿var length = 200;
+﻿var length = 400;
 
 function gRealMod(n: number, m: number): number {
     // javascript mod doesnt work with negative numbers
@@ -131,10 +131,13 @@ class CellularAutomaton {
 }
 
 class Hw3Controllerv2 extends BaseTimer {
-    svg: any;
-    statsBox: any;
-    data: CellularAutomaton[] = [];
-    increment: number = 0.1;
+    private svg: any;
+    private statsBox: any;
+    private data: CellularAutomaton[] = [];
+    private increment: number = 0.01;
+    private maxEntropy: number = 1;
+    private minEntropy: number = 10;
+    private timeStepIndex: number = 0;
 
     constructor(elementId: string) {
         super(elementId);
@@ -144,22 +147,79 @@ class Hw3Controllerv2 extends BaseTimer {
         for (var i: number = 0; i < length; ++i) {
             data.push(Math.random());
         }
-        for (var b: number = 0; b <= 1; b += this.increment) {
-            for (var a: number = 0; a <= 1; a += this.increment) {
-                //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-                //this.data.push(ca);
-                this.data[this.data.length] = new CellularAutomaton(a, b, data);
-            }
-        }
+        //for (var b: number = 0; b <= 1; b += this.increment) {
+        //    for (var a: number = 0; a <= 1; a += this.increment) {
+        //        //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
+        //        //this.data.push(ca);
+        //        this.data[this.data.length] = new CellularAutomaton(a, b, data);
+        //    }
+        //}
+        var b: number = 0;
+        //for (var a: number = 0; a <= 1; a += this.increment) {
+        //    this.data[this.data.length] = new CellularAutomaton(a, b, data);
+        //}
+        //b += this.increment;
+        //setTimeout(() => {
+        //    if (b <= 1) {
+        //        for (var a: number = 0; a <= 1; a += this.increment) {
+        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
+        //        }
+        //        setTimeout(() => {
+        //            if (b <= 1) {
+        //                for (var a: number = 0; a <= 1; a += this.increment) {
+        //                    this.data[this.data.length] = new CellularAutomaton(a, b, data);
+        //                }
+        //            }
+        //            b += this.increment;
+        //        }, 30);
+        //    }
+        //    b += this.increment;
+        //}, 30);
 
-        var svg = d3.select("main").append("canvas");
+        //initialize() {
+        //    if (b <= 1) {
+        //        for (var a: number = 0; a <= 1; a += this.increment) {
+        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
+        //        }
+        //        setTimeout(() => initialize(), 30);
+        //        b += this.increment;
+        //    }
+        //}
+        //initialize();
+        this.initializeCa();
+
+
+        var svg: any = d3.select("main").append("canvas");
         svg.attr("width", length * 3).attr("height", length * 3);
+        var ctx = svg.node().getContext('2d');
+        ctx.translate(0, svg.node().height);
+        ctx.scale(1, -1);
+
         svg.on("mousemove", () => this.onMouse());
 
         this.svg = svg;
         this.statsBox = d3.select("main").append("div");
         this.statsBox.attr("id", "hw3stats");
         return;
+    }
+
+    private initHelper(b: number, data: number[]) {
+        if (b <= 1) {
+            for (var a: number = 0; a <= 1; a += this.increment) {
+                this.data[this.data.length] = new CellularAutomaton(a, b, data);
+            }
+            setTimeout(() => this.initHelper(b, data), 30);
+            b += this.increment;
+        }
+    }
+
+    initializeCa() {
+        var b: number = 0;
+        var data: number[] = [];
+        for (var i: number = 0; i < length; ++i) {
+            data.push(Math.random());
+        }
+        this.initHelper(b, data);
     }
 
     onMouse() {
@@ -180,26 +240,24 @@ class Hw3Controllerv2 extends BaseTimer {
         return;
     }
 
-    private maxE: number = 1;
-    private minE: number = 10;
-
     dostuff() {
         const width: number = parseInt(this.svg.style("width"));
         const height: number = parseInt(this.svg.style("height"));
         const num_boxes = (1 / this.increment) + 1;
-        for (var i: number = 0; i < this.data.length; ++i) {
-            var ca: CellularAutomaton = this.data[i];
+        //for (var i: number = 0; i < this.data.length; ++i)
+        {
+            var ca: CellularAutomaton = this.data[this.timeStepIndex];
             //  setTimeout(() => {
             ca.makeNewRow();
             var entropy: number = ca.getEntropy();
-            if (entropy > this.maxE) {
-                this.maxE = entropy
+            if (entropy > this.maxEntropy) {
+                this.maxEntropy = entropy
             }
-            if (entropy < this.minE) {
-                this.minE = entropy
+            if (entropy < this.minEntropy) {
+                this.minEntropy = entropy
             }
-            if (this.maxE != this.minE) {
-                entropy = (entropy - this.minE) / (this.maxE - this.minE);
+            if (this.maxEntropy != this.minEntropy) {
+                entropy = (entropy - this.minEntropy) / (this.maxEntropy - this.minEntropy);
             }
             this.graphHeatMap(
                 entropy,
@@ -210,6 +268,10 @@ class Hw3Controllerv2 extends BaseTimer {
             );
             // return;
             // }, 0)
+            ++this.timeStepIndex;
+            if (this.timeStepIndex >= this.data.length) {
+                this.timeStepIndex = 0;
+            }
         }
         return;
     }
