@@ -12,6 +12,10 @@ span {
     background-color: white;
 }
 
+    #navdiv li {
+        list-style: none;
+    }
+
 #hw2stats {
     position: fixed;
     top: 1px;

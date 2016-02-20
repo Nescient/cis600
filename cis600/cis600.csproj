@@ -33,6 +33,7 @@
     <TypeScriptCompile Include="Hw1Controller.ts" />
     <TypeScriptCompile Include="Hw2Controller.ts" />
     <TypeScriptCompile Include="Hw3Controller.ts" />
+    <TypeScriptCompile Include="Hw3ControllerPart2.ts" />
     <TypeScriptCompile Include="Scripts\typings\d3\d3.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\d3\plugins\d3.superformula.d.ts" />
     <TypeScriptCompile Include="Scripts\typings\jquery\jquery.d.ts" />
