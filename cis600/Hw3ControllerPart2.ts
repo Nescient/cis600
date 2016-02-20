@@ -1,4 +1,4 @@
-﻿var length = 400;
+﻿var length = 200;
 
 function gRealMod(n: number, m: number): number {
     // javascript mod doesnt work with negative numbers
@@ -9,6 +9,18 @@ function gRealMod(n: number, m: number): number {
 function gToHexString(val: number): string {
     var hexstring: string = Math.round(val * 0xFFFFFF).toString(16);
     hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
+    return hexstring;
+}
+
+function gToGrayHexString(val: number): string {
+    var hexstring: string = Math.round(val * 0xFFF).toString(16);
+    hexstring = (hexstring.length < 3) ? "000".substr(hexstring.length - 3) + hexstring : hexstring;
+    return hexstring;
+}
+
+function gToBlueHexString(val: number): string {
+    var hexstring: string = Math.round(Math.min(val * 0xFF, 0xFF)).toString(16);
+    hexstring = (hexstring.length < 2) ? "00".substr(hexstring.length - 2) + hexstring : hexstring;
     return hexstring;
 }
 
@@ -53,9 +65,9 @@ class CellularAutomaton {
         this.currentRow = row;
         if (this.currentRow) {
             this.rowCount = 1;
-            this.counts = Array(this.currentRow.length);
-            for (var i: number = 0; i < this.counts.length; ++i) {
-                this.counts[i] = new ColumnCount(i);
+            for (var i: number = 0; i < this.currentRow.length; ++i) {
+                // this.counts.push(new ColumnCount(i));
+                this.counts[this.counts.length] = new ColumnCount(i);
             }
             this.updateCounts();
         }
@@ -67,17 +79,17 @@ class CellularAutomaton {
     }
 
     public getB(): number {
-        return this.a;
+        return this.b;
     }
 
     public makeNewRow() {
         var len: number = this.currentRow.length;
-        var new_row: number[] = Array(len);
+        var new_row: number[] = [];
         for (var i: number = 0; i < len; ++i) {
             var previous: number = this.currentRow[gRealMod(i - 1, len)];
             var current: number = this.currentRow[gRealMod(i, len)];
             var next: number = this.currentRow[gRealMod(i + 1, len)];
-            new_row[i] = this.poly(this.a, this.b, previous, current, next);
+            new_row.push(this.poly(this.a, this.b, previous, current, next));
             if (new_row[i] > 1) { alert(new_row[i]); }
             else if (new_row[i] < 0) { alert(new_row[i]); }
         }
@@ -122,7 +134,7 @@ class Hw3Controllerv2 extends BaseTimer {
     svg: any;
     statsBox: any;
     data: CellularAutomaton[] = [];
-    increment: number = 0.01;
+    increment: number = 0.1;
 
     constructor(elementId: string) {
         super(elementId);
@@ -134,12 +146,13 @@ class Hw3Controllerv2 extends BaseTimer {
         }
         for (var b: number = 0; b <= 1; b += this.increment) {
             for (var a: number = 0; a <= 1; a += this.increment) {
-                var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-                this.data.push(ca);
+                //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
+                //this.data.push(ca);
+                this.data[this.data.length] = new CellularAutomaton(a, b, data);
             }
         }
 
-        var svg = d3.select("main").append("svg");
+        var svg = d3.select("main").append("canvas");
         svg.attr("width", length * 3).attr("height", length * 3);
         svg.on("mousemove", () => this.onMouse());
 
@@ -167,46 +180,55 @@ class Hw3Controllerv2 extends BaseTimer {
         return;
     }
 
+    private maxE: number = 1;
+    private minE: number = 10;
+
     dostuff() {
         const width: number = parseInt(this.svg.style("width"));
         const height: number = parseInt(this.svg.style("height"));
         const num_boxes = (1 / this.increment) + 1;
-        var heat_data: { value: number, x: number, y: number, color: string }[] = [];
         for (var i: number = 0; i < this.data.length; ++i) {
             var ca: CellularAutomaton = this.data[i];
+            //  setTimeout(() => {
             ca.makeNewRow();
             var entropy: number = ca.getEntropy();
-            heat_data.push({
-                value: entropy,
-                x: ca.getA() / this.increment,
-                y: ca.getB() / this.increment,
-                color: "#" + gToHexString(entropy)
-            });
+            if (entropy > this.maxE) {
+                this.maxE = entropy
+            }
+            if (entropy < this.minE) {
+                this.minE = entropy
+            }
+            if (this.maxE != this.minE) {
+                entropy = (entropy - this.minE) / (this.maxE - this.minE);
+            }
+            this.graphHeatMap(
+                entropy,
+                ca.getA() / this.increment,
+                ca.getB() / this.increment,
+                //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
+                "#0000" + gToBlueHexString(entropy)
+            );
+            // return;
+            // }, 0)
         }
-        this.graphHeatMap(heat_data);
         return;
     }
 
-    graphHeatMap(data: { value: number, x: number, y: number, color: string }[]) {
+    graphHeatMap(value: number, x: number, y: number, color: string) {
         const total_width: number = parseInt(this.svg.style("width"));
         const total_height: number = parseInt(this.svg.style("height"));
         const num_boxes = (1 / this.increment) + 1;
         const size: number = total_width / num_boxes;
-
-        var rects = this.svg.selectAll("rect")
-            .data(data, function (d, i) { return d.value; });
-        rects.exit().remove();
-        rects.enter().append("rect")
-            .attr("x", function (d) {
-                return d.x * size;
-            })
-            .attr("y", function (d) {
-                return d.y * size;
-            })
-            .attr("width", size)
-            .attr("height", size)
-            .style("fill", function (d) {
-                return d.color;
-            });
+        if (x.toFixed() == "5" && y.toFixed() == "5") {
+            console.log(x.toString() + "," + y.toString() + ":" + value.toString());
+            console.log(color);
+        }
+        var context = this.svg.node().getContext("2d");
+        context.beginPath();
+        context.rect(x * size, y * size, size, size);
+        context.fillStyle = color;
+        context.fill();
+        context.closePath();
+        return;
     }
 }

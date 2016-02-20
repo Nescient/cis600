@@ -3,7 +3,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
-var length = 400;
+var length = 200;
 function gRealMod(n, m) {
     // javascript mod doesnt work with negative numbers
     //http://stackoverflow.com/a/17323608
@@ -12,6 +12,16 @@ function gRealMod(n, m) {
 function gToHexString(val) {
     var hexstring = Math.round(val * 0xFFFFFF).toString(16);
     hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
+    return hexstring;
+}
+function gToGrayHexString(val) {
+    var hexstring = Math.round(val * 0xFFF).toString(16);
+    hexstring = (hexstring.length < 3) ? "000".substr(hexstring.length - 3) + hexstring : hexstring;
+    return hexstring;
+}
+function gToBlueHexString(val) {
+    var hexstring = Math.round(Math.min(val * 0xFF, 0xFF)).toString(16);
+    hexstring = (hexstring.length < 2) ? "00".substr(hexstring.length - 2) + hexstring : hexstring;
     return hexstring;
 }
 var ColumnCount = (function () {
@@ -51,9 +61,9 @@ var CellularAutomaton = (function () {
         this.currentRow = row;
         if (this.currentRow) {
             this.rowCount = 1;
-            this.counts = Array(this.currentRow.length);
-            for (var i = 0; i < this.counts.length; ++i) {
-                this.counts[i] = new ColumnCount(i);
+            for (var i = 0; i < this.currentRow.length; ++i) {
+                // this.counts.push(new ColumnCount(i));
+                this.counts[this.counts.length] = new ColumnCount(i);
             }
             this.updateCounts();
         }
@@ -63,16 +73,16 @@ var CellularAutomaton = (function () {
         return this.a;
     };
     CellularAutomaton.prototype.getB = function () {
-        return this.a;
+        return this.b;
     };
     CellularAutomaton.prototype.makeNewRow = function () {
         var len = this.currentRow.length;
-        var new_row = Array(len);
+        var new_row = [];
         for (var i = 0; i < len; ++i) {
             var previous = this.currentRow[gRealMod(i - 1, len)];
             var current = this.currentRow[gRealMod(i, len)];
             var next = this.currentRow[gRealMod(i + 1, len)];
-            new_row[i] = this.poly(this.a, this.b, previous, current, next);
+            new_row.push(this.poly(this.a, this.b, previous, current, next));
             if (new_row[i] > 1) {
                 alert(new_row[i]);
             }
@@ -118,7 +128,9 @@ var Hw3Controllerv2 = (function (_super) {
         var _this = this;
         _super.call(this, elementId);
         this.data = [];
-        this.increment = 0.01;
+        this.increment = 0.1;
+        this.maxE = 1;
+        this.minE = 10;
         var a = 0;
         var b = 0;
         var data = [];
@@ -127,11 +139,12 @@ var Hw3Controllerv2 = (function (_super) {
         }
         for (var b = 0; b <= 1; b += this.increment) {
             for (var a = 0; a <= 1; a += this.increment) {
-                var ca = new CellularAutomaton(a, b, data);
-                this.data.push(ca);
+                //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
+                //this.data.push(ca);
+                this.data[this.data.length] = new CellularAutomaton(a, b, data);
             }
         }
-        var svg = d3.select("main").append("svg");
+        var svg = d3.select("main").append("canvas");
         svg.attr("width", length * 3).attr("height", length * 3);
         svg.on("mousemove", function () { return _this.onMouse(); });
         this.svg = svg;
@@ -154,41 +167,42 @@ var Hw3Controllerv2 = (function (_super) {
         var width = parseInt(this.svg.style("width"));
         var height = parseInt(this.svg.style("height"));
         var num_boxes = (1 / this.increment) + 1;
-        var heat_data = [];
         for (var i = 0; i < this.data.length; ++i) {
             var ca = this.data[i];
+            //  setTimeout(() => {
             ca.makeNewRow();
             var entropy = ca.getEntropy();
-            heat_data.push({
-                value: entropy,
-                x: ca.getA() / this.increment,
-                y: ca.getB() / this.increment,
-                color: "#" + gToHexString(entropy)
-            });
+            if (entropy > this.maxE) {
+                this.maxE = entropy;
+            }
+            if (entropy < this.minE) {
+                this.minE = entropy;
+            }
+            if (this.maxE != this.minE) {
+                entropy = (entropy - this.minE) / (this.maxE - this.minE);
+            }
+            this.graphHeatMap(entropy, ca.getA() / this.increment, ca.getB() / this.increment, 
+            //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
+            "#0000" + gToBlueHexString(entropy));
         }
-        this.graphHeatMap(heat_data);
         return;
     };
-    Hw3Controllerv2.prototype.graphHeatMap = function (data) {
+    Hw3Controllerv2.prototype.graphHeatMap = function (value, x, y, color) {
         var total_width = parseInt(this.svg.style("width"));
         var total_height = parseInt(this.svg.style("height"));
         var num_boxes = (1 / this.increment) + 1;
         var size = total_width / num_boxes;
-        var rects = this.svg.selectAll("rect")
-            .data(data, function (d, i) { return d.value; });
-        rects.exit().remove();
-        rects.enter().append("rect")
-            .attr("x", function (d) {
-            return d.x * size;
-        })
-            .attr("y", function (d) {
-            return d.y * size;
-        })
-            .attr("width", size)
-            .attr("height", size)
-            .style("fill", function (d) {
-            return d.color;
-        });
+        if (x.toFixed() == "5" && y.toFixed() == "5") {
+            console.log(x.toString() + "," + y.toString() + ":" + value.toString());
+            console.log(color);
+        }
+        var context = this.svg.node().getContext("2d");
+        context.beginPath();
+        context.rect(x * size, y * size, size, size);
+        context.fillStyle = color;
+        context.fill();
+        context.closePath();
+        return;
     };
     return Hw3Controllerv2;
 })(BaseTimer);
