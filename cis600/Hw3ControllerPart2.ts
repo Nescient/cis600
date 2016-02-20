@@ -28,6 +28,7 @@ function gToBlueHexString(val: number): string {
 class ColumnCount {
     private column: number = 0;
     private counts: { color: string, number }[] = [];
+    private entropy: number[] = [];
 
     constructor(column: number) {
         this.column = column;
@@ -39,7 +40,26 @@ class ColumnCount {
         return;
     }
 
-    public getEntropy(rowCount: number): number {
+    public updateEntropy(rowCount: number) {
+        this.entropy[rowCount-1] = this.getEntropy(rowCount);
+    }
+
+    public getEntropyVariance() {
+        var mean: number = 0;
+        for (var i: number = 0; i < this.entropy.length; ++i) {
+           // mean += this.entropy[i] ? this.entropy[i] : 0;
+            mean += this.entropy[i];
+        }
+        mean /= this.entropy.length;
+        var variance: number = 0;
+        for (var i: number = 0; i < this.entropy.length; ++i) {
+            var delta: number = this.entropy[i] - mean;
+            variance += (delta * delta);
+        }
+        return variance / this.entropy.length;
+    }
+
+    private getEntropy(rowCount: number): number {
         var entropy: number = 0;
         var valid_strings = Object.keys(this.counts);
         var total_count: number = 0;
@@ -70,7 +90,7 @@ class CellularAutomaton {
                 // this.counts.push(new ColumnCount(i));
                 this.counts[this.counts.length] = new ColumnCount(i);
             }
-            this.updateCounts();
+            this.updateCountsAndEntropy();
         }
         return;
     }
@@ -108,33 +128,28 @@ class CellularAutomaton {
     private setNextRow(row: number[]) {
         this.currentRow = row;
         ++this.rowCount;
-        this.updateCounts();
+        this.updateCountsAndEntropy();
         return;
     }
 
-    private updateCounts() {
+    private updateCountsAndEntropy() {
         for (var i: number = 0; i < this.currentRow.length; ++i) {
             var value: string =
                 gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
             this.counts[i].addCount(value);
+            this.counts[i].updateEntropy(this.rowCount);
         }
     }
 
-    public getEntropy(): number {
-        var avg_entropy: number = 0;
+    public getEntropySigma(): number {
+        var avg_variance: number = 0;
         for (var i: number = 0; i < this.counts.length; ++i) {
-            avg_entropy += this.counts[i].getEntropy(this.rowCount);
+            avg_variance += this.counts[i].getEntropyVariance();
         }
-        avg_entropy /= this.counts.length;
-        var dev_entropy = 0;
-        for (var i: number = 0; i < this.counts.length; ++i) {
-            var temp: number = this.counts[i].getEntropy(this.rowCount) - avg_entropy;
-            dev_entropy += temp * temp;
-        }
-        dev_entropy / this.counts.length;
-        return Math.sqrt(dev_entropy);
+        avg_variance /= this.counts.length;
+        return Math.sqrt(avg_variance);
     }
 }
 
@@ -257,7 +272,7 @@ class Hw3Controllerv2 extends BaseTimer {
             var ca: CellularAutomaton = this.data[this.timeStepIndex];
             //  setTimeout(() => {
             ca.makeNewRow();
-            var entropy: number = ca.getEntropy();
+            var entropy: number = ca.getEntropySigma();
             if (entropy > this.maxEntropy) {
                 this.maxEntropy = entropy
             }
