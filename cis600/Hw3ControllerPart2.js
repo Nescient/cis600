@@ -4,27 +4,62 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var length = 400;
+function gRealMod(n, m) {
+    // javascript mod doesnt work with negative numbers
+    //http://stackoverflow.com/a/17323608
+    return ((n % m) + m) % m;
+}
+function gToHexString(val) {
+    var hexstring = Math.round(val * 0xFFFFFF).toString(16);
+    hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
+    return hexstring;
+}
 var CellularAutomaton = (function () {
     function CellularAutomaton(a, b, row) {
         this.a = 0;
         this.b = 0;
         this.counts = [];
         this.currentRow = [];
+        this.rowCount = 0;
         this.a = a;
         this.b = b;
         this.currentRow = row;
+        if (this.currentRow) {
+            this.rowCount = 1;
+        }
         return;
     }
+    CellularAutomaton.prototype.getCurrentRow = function () {
+        return this.currentRow;
+    };
+    CellularAutomaton.prototype.setNextRow = function (row) {
+        this.currentRow = row;
+        ++this.rowCount;
+        return;
+    };
+    CellularAutomaton.prototype.updateCounts = function () {
+        for (var i = 0; i < this.currentRow.length; ++i) {
+            var value = gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
+                gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
+                gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
+            this.counts[value] = (this.counts[value] ? this.counts[value] + 1 : 1);
+        }
+    };
     CellularAutomaton.prototype.getEntropy = function () {
-        //var valid_strings = Object.keys(stats);
-        //for (var i: number = 0; i < valid_strings.length; ++i) {
-        //    var count = stats[valid_strings[i]];
-        //    var weight = count / row;
-        //    weights[valid_strings[i]] = weight;
-        //    entropy += weight * (Math.log(weight) / Math.log(2));
-        //    total_count += count;
-        //}
-        return Math.random();
+        var entropy = 0;
+        var valid_strings = Object.keys(this.counts);
+        var total_count = 0;
+        for (var i = 0; i < valid_strings.length; ++i) {
+            var count = this.counts[valid_strings[i]];
+            var weight = count / this.rowCount;
+            entropy += weight * (Math.log(weight) / Math.log(2));
+            total_count += count;
+        }
+        if (total_count != (this.rowCount * this.currentRow.length)) {
+            alert("total count != row count : " + total_count.toString() +
+                " != " + (this.rowCount * this.currentRow.length).toString());
+        }
+        return 0 - entropy;
     };
     return CellularAutomaton;
 })();
@@ -44,7 +79,7 @@ var Hw3Controllerv2 = (function (_super) {
         for (var b = 0; b <= 1; b += this.increment) {
             for (var a = 0; a <= 1; a += this.increment) {
                 var ca = new CellularAutomaton(a, b, data);
-                this.countRowByThree(ca.currentRow, ca.counts);
+                this.countRowByThree(ca.getCurrentRow(), ca.counts);
                 this.data.push(ca);
             }
         }
@@ -71,8 +106,8 @@ var Hw3Controllerv2 = (function (_super) {
         var heat_data = [];
         for (var i = 0; i < this.data.length; ++i) {
             var ca = this.data[i];
-            ca.currentRow = this.nextRow(ca.a, ca.b, ca.currentRow);
-            this.countRowByThree(ca.currentRow, ca.counts);
+            ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
+            this.countRowByThree(ca.getCurrentRow(), ca.counts);
             var entropy = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
             var height = parseInt(this.svg.style("height"));

@@ -1,28 +1,103 @@
 ﻿var length = 400;
 
+function gRealMod(n: number, m: number): number {
+    // javascript mod doesnt work with negative numbers
+    //http://stackoverflow.com/a/17323608
+    return ((n % m) + m) % m;
+}
+
+function gToHexString(val: number): string {
+    var hexstring: string = Math.round(val * 0xFFFFFF).toString(16);
+    hexstring = (hexstring.length < 6) ? "000000".substr(hexstring.length - 6) + hexstring : hexstring;
+    return hexstring;
+}
+
+class ColumnCount {
+    private column: number = 0;
+    private counts: { color: string, number }[] = [];
+
+    constructor(column: number) {
+        this.column = column;
+        return;
+    }
+
+    public addCount(str: string) {
+        this.counts[str] = (this.counts[str] ? this.counts[str] + 1 : 1);
+        return;
+    }
+
+    public getEntropy(rowCount: number): number {
+        var entropy: number = 0;
+        var valid_strings = Object.keys(this.counts);
+        var total_count: number = 0;
+        for (var i: number = 0; i < valid_strings.length; ++i) {
+            var count = this.counts[valid_strings[i]];
+            var weight = count / rowCount;
+            entropy += weight * (Math.log(weight) / Math.log(2));
+            total_count += count;
+        }
+        return 0 - entropy;
+    }
+}
+
 class CellularAutomaton {
     a: number = 0;
     b: number = 0;
-    counts: { color: string, number }[] = [];
-    currentRow: number[] = [];
+    private counts: ColumnCount[] = [];
+    private currentRow: number[] = [];
+    private rowCount: number = 0;
 
     constructor(a: number, b: number, row: number[]) {
         this.a = a;
         this.b = b;
         this.currentRow = row;
+        if (this.currentRow) {
+            this.rowCount = 1;
+            this.counts = Array(this.currentRow.length);
+            for (var i: number = 0; i < this.counts.length; ++i) {
+                this.counts[i] = new ColumnCount(i);
+            }
+            this.updateCounts();
+        }
         return;
     }
 
+    getCurrentRow(): number[] {
+        return this.currentRow;
+    }
+
+    setNextRow(row: number[]) {
+        this.currentRow = row;
+        ++this.rowCount;
+        this.updateCounts();
+        return;
+    }
+
+    updateCounts() {
+        for (var i: number = 0; i < this.currentRow.length; ++i) {
+            var value: string =
+                gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
+                gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
+                gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
+            this.counts[value] = (this.counts[value] ? this.counts[value] + 1 : 1);
+        }
+    }
+
     getEntropy(): number {
-        //var valid_strings = Object.keys(stats);
-        //for (var i: number = 0; i < valid_strings.length; ++i) {
-        //    var count = stats[valid_strings[i]];
-        //    var weight = count / row;
-        //    weights[valid_strings[i]] = weight;
-        //    entropy += weight * (Math.log(weight) / Math.log(2));
-        //    total_count += count;
-        //}
-        return Math.random();
+        var entropy: number = 0;
+        var valid_strings = Object.keys(this.counts);
+        var total_count: number = 0;
+        for (var i: number = 0; i < valid_strings.length; ++i) {
+            var count = this.counts[valid_strings[i]];
+            var weight = count / this.rowCount;
+            entropy += weight * (Math.log(weight) / Math.log(2));
+            total_count += count;
+        }
+        if (total_count != (this.rowCount * this.currentRow.length)) {
+            alert("total count != row count : " + total_count.toString() +
+                " != " + (this.rowCount * this.currentRow.length).toString());
+        }
+        return 0 - entropy;
     }
 }
 
@@ -43,7 +118,7 @@ class Hw3Controllerv2 extends BaseTimer {
         for (var b: number = 0; b <= 1; b += this.increment) {
             for (var a: number = 0; a <= 1; a += this.increment) {
                 var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-                this.countRowByThree(ca.currentRow, ca.counts);
+                this.countRowByThree(ca.getCurrentRow(), ca.counts);
                 this.data.push(ca);
             }
         }
@@ -80,8 +155,8 @@ class Hw3Controllerv2 extends BaseTimer {
         var heat_data: { value: number, x: number, y: number, color: string }[] = [];
         for (var i: number = 0; i < this.data.length; ++i) {
             var ca: CellularAutomaton = this.data[i];
-            ca.currentRow = this.nextRow(ca.a, ca.b, ca.currentRow);
-            this.countRowByThree(ca.currentRow, ca.counts);
+            ca.setNextRow(this.nextRow(ca.a, ca.b, ca.getCurrentRow()));
+            this.countRowByThree(ca.getCurrentRow(), ca.counts);
 
             var entropy: number = ca.getEntropy();
             var width = parseInt(this.svg.style("width"));
