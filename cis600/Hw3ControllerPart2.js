@@ -115,14 +115,18 @@ var CellularAutomaton = (function () {
         }
     };
     CellularAutomaton.prototype.getEntropy = function () {
-        var entropy = this.counts[0].getEntropy(this.rowCount);
-        for (var i = 1; i < this.counts.length; ++i) {
-            var new_entropy = this.counts[i].getEntropy(this.rowCount);
-            if (new_entropy < entropy) {
-                entropy = new_entropy;
-            }
+        var avg_entropy = 0;
+        for (var i = 0; i < this.counts.length; ++i) {
+            avg_entropy += this.counts[i].getEntropy(this.rowCount);
         }
-        return entropy;
+        avg_entropy /= this.counts.length;
+        var dev_entropy = 0;
+        for (var i = 0; i < this.counts.length; ++i) {
+            var temp = this.counts[i].getEntropy(this.rowCount) - avg_entropy;
+            dev_entropy += temp * temp;
+        }
+        dev_entropy / this.counts.length;
+        return Math.sqrt(dev_entropy);
     };
     return CellularAutomaton;
 })();

@@ -123,14 +123,18 @@ class CellularAutomaton {
     }
 
     public getEntropy(): number {
-        var entropy: number = this.counts[0].getEntropy(this.rowCount);
-        for (var i: number = 1; i < this.counts.length; ++i) {
-            var new_entropy: number = this.counts[i].getEntropy(this.rowCount);
-            if (new_entropy < entropy) {
-                entropy = new_entropy;
-            }
+        var avg_entropy: number = 0;
+        for (var i: number = 0; i < this.counts.length; ++i) {
+            avg_entropy += this.counts[i].getEntropy(this.rowCount);
         }
-        return entropy;
+        avg_entropy /= this.counts.length;
+        var dev_entropy = 0;
+        for (var i: number = 0; i < this.counts.length; ++i) {
+            var temp: number = this.counts[i].getEntropy(this.rowCount) - avg_entropy;
+            dev_entropy += temp * temp;
+        }
+        dev_entropy / this.counts.length;
+        return Math.sqrt(dev_entropy);
     }
 }
 
