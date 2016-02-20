@@ -138,7 +138,7 @@ class Hw3Controllerv2 extends BaseTimer {
     private svg: any;
     private statsBox: any;
     private data: CellularAutomaton[] = [];
-    private increment: number = 0.01;
+    private increment: number = 0.05;
     private maxEntropy: number = 1;
     private minEntropy: number = 10;
     private timeStepIndex: number = 0;

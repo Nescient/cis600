@@ -132,7 +132,7 @@ var Hw3Controllerv2 = (function (_super) {
         var _this = this;
         _super.call(this, elementId);
         this.data = [];
-        this.increment = 0.01;
+        this.increment = 0.05;
         this.maxEntropy = 1;
         this.minEntropy = 10;
         this.timeStepIndex = 0;
