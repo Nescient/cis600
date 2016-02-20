@@ -1,4 +1,5 @@
 ﻿var length = 400;
+const gMaxTimeStep: number = 4000;
 
 function gRealMod(n: number, m: number): number {
     // javascript mod doesnt work with negative numbers
@@ -83,17 +84,20 @@ class CellularAutomaton {
     }
 
     public makeNewRow() {
-        var len: number = this.currentRow.length;
-        var new_row: number[] = [];
-        for (var i: number = 0; i < len; ++i) {
-            var previous: number = this.currentRow[gRealMod(i - 1, len)];
-            var current: number = this.currentRow[gRealMod(i, len)];
-            var next: number = this.currentRow[gRealMod(i + 1, len)];
-            new_row.push(this.poly(this.a, this.b, previous, current, next));
-            if (new_row[i] > 1) { alert(new_row[i]); }
-            else if (new_row[i] < 0) { alert(new_row[i]); }
+        if (this.rowCount < gMaxTimeStep) {
+            var len: number = this.currentRow.length;
+            var new_row: number[] = [];
+            for (var i: number = 0; i < len; ++i) {
+                var previous: number = this.currentRow[gRealMod(i - 1, len)];
+                var current: number = this.currentRow[gRealMod(i, len)];
+                var next: number = this.currentRow[gRealMod(i + 1, len)];
+                new_row.push(this.poly(this.a, this.b, previous, current, next));
+                if (new_row[i] > 1) { alert(new_row[i]); }
+                else if (new_row[i] < 0) { alert(new_row[i]); }
+            }
+            return this.setNextRow(new_row);
         }
-        return this.setNextRow(new_row);
+        return;
     }
 
     // taken from Blair's ALife1Dim Java program

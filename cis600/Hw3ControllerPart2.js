@@ -4,6 +4,7 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var length = 400;
+var gMaxTimeStep = 4000;
 function gRealMod(n, m) {
     // javascript mod doesnt work with negative numbers
     //http://stackoverflow.com/a/17323608
@@ -76,21 +77,24 @@ var CellularAutomaton = (function () {
         return this.b;
     };
     CellularAutomaton.prototype.makeNewRow = function () {
-        var len = this.currentRow.length;
-        var new_row = [];
-        for (var i = 0; i < len; ++i) {
-            var previous = this.currentRow[gRealMod(i - 1, len)];
-            var current = this.currentRow[gRealMod(i, len)];
-            var next = this.currentRow[gRealMod(i + 1, len)];
-            new_row.push(this.poly(this.a, this.b, previous, current, next));
-            if (new_row[i] > 1) {
-                alert(new_row[i]);
+        if (this.rowCount < gMaxTimeStep) {
+            var len = this.currentRow.length;
+            var new_row = [];
+            for (var i = 0; i < len; ++i) {
+                var previous = this.currentRow[gRealMod(i - 1, len)];
+                var current = this.currentRow[gRealMod(i, len)];
+                var next = this.currentRow[gRealMod(i + 1, len)];
+                new_row.push(this.poly(this.a, this.b, previous, current, next));
+                if (new_row[i] > 1) {
+                    alert(new_row[i]);
+                }
+                else if (new_row[i] < 0) {
+                    alert(new_row[i]);
+                }
             }
-            else if (new_row[i] < 0) {
-                alert(new_row[i]);
-            }
+            return this.setNextRow(new_row);
         }
-        return this.setNextRow(new_row);
+        return;
     };
     // taken from Blair's ALife1Dim Java program
     CellularAutomaton.prototype.poly = function (a, b, u, x, v) {
