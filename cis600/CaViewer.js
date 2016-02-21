@@ -30,10 +30,15 @@ var CaViewer = (function () {
         return;
     };
     CaViewer.prototype.timeStep = function () {
-        var next_row = this.nextRow(this.currentRow);
-        this.data.push(this.currentRow);
-        this.graphRow(next_row, this.data.length);
-        this.currentRow = next_row;
+        if (this.data.length < gMaxTimeStep) {
+            var next_row = this.nextRow(this.currentRow);
+            this.data.push(this.currentRow);
+            this.graphRow(next_row, this.data.length);
+            this.currentRow = next_row;
+        }
+        else {
+            this.stop();
+        }
         return;
     };
     CaViewer.prototype.nextRow = function (row) {
@@ -66,8 +71,16 @@ var CaViewer = (function () {
         var box_size = this.boxSize;
         var y_index = yIndex * this.boxSize;
         var context = this.svg.node().getContext("2d");
-        if (y_index > this.height) {
-            context.translate(0, 1);
+        if (y_index >= this.height) {
+            //http://stackoverflow.com/a/8394985
+            var shiftContext = function (ctx, w, h, dx, dy) {
+                var clamp = function (high, value) { return Math.max(0, Math.min(high, value)); };
+                var imageData = ctx.getImageData(clamp(w, -dx), clamp(h, -dy), clamp(w, w - dx), clamp(h, h - dy));
+                ctx.clearRect(0, 0, w, h);
+                ctx.putImageData(imageData, 0, 0);
+            };
+            shiftContext(context, 400, this.height, 0, -1);
+            y_index = this.height - 1;
         }
         row.forEach(function (d, i) {
             context.beginPath();

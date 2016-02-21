@@ -9,8 +9,8 @@ class CaViewer {
     b: number = Math.random();
     boxSize: number = 0;
     height: number = 0;
-    timerToken: number=0;
-    timerTimeout: number=10;
+    timerToken: number = 0;
+    timerTimeout: number = 10;
 
     constructor(svg: any, rowLength: number, a: number, b: number) {
         for (var i: number = 0; i < rowLength; ++i) {
@@ -36,10 +36,15 @@ class CaViewer {
     }
 
     public timeStep() {
-        var next_row: number[] = this.nextRow(this.currentRow);
-        this.data.push(this.currentRow);
-        this.graphRow(next_row, this.data.length);
-        this.currentRow = next_row;
+        if (this.data.length < gMaxTimeStep) {
+            var next_row: number[] = this.nextRow(this.currentRow);
+            this.data.push(this.currentRow);
+            this.graphRow(next_row, this.data.length);
+            this.currentRow = next_row;
+        }
+        else {
+            this.stop();
+        }
         return;
     }
 
@@ -70,10 +75,29 @@ class CaViewer {
 
     private graphRow(row: number[], yIndex: number) {
         const box_size: number = this.boxSize;
-        const y_index: number = yIndex * this.boxSize;
+        var y_index: number = yIndex * this.boxSize;
         var context = this.svg.node().getContext("2d");
-        if (y_index > this.height) {
-            context.translate(0, 1);
+        if (y_index >= this.height) {  
+//http://stackoverflow.com/a/8394985
+            var shiftContext = function (ctx, w, h, dx, dy) {
+                var clamp = function (high, value) { return Math.max(0, Math.min(high, value)); };
+                var imageData = ctx.getImageData(clamp(w, -dx), clamp(h, -dy), clamp(w, w - dx), clamp(h, h - dy));
+                ctx.clearRect(0, 0, w, h);
+                ctx.putImageData(imageData, 0, 0);
+            }
+
+
+            shiftContext(context, 400, this.height, 0, -1);
+            y_index = this.height - 1;
+
+            //context.clearRect(0, 0, 600, 200);
+            //context.save();
+            //context.translate(-100, -100);
+
+          
+
+            //context.restore();
+            
         }
         row.forEach(function (d, i) {
             context.beginPath();
