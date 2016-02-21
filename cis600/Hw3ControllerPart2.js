@@ -43,18 +43,22 @@ var ColumnCount = (function () {
         this.entropy[rowCount - 1] = this.getEntropy(rowCount);
     };
     ColumnCount.prototype.getEntropyVariance = function () {
+        var offset = 50; // throw away everything under 50 timesteps
+        if (this.entropy.length < offset) {
+            return 0;
+        }
         var mean = 0;
-        for (var i = 0; i < this.entropy.length; ++i) {
+        for (var i = offset; i < this.entropy.length; ++i) {
             // mean += this.entropy[i] ? this.entropy[i] : 0;
             mean += this.entropy[i];
         }
-        mean /= this.entropy.length;
+        mean /= (this.entropy.length - offset);
         var variance = 0;
-        for (var i = 0; i < this.entropy.length; ++i) {
+        for (var i = offset; i < this.entropy.length; ++i) {
             var delta = this.entropy[i] - mean;
             variance += (delta * delta);
         }
-        return variance / this.entropy.length;
+        return variance / (this.entropy.length - offset);
     };
     ColumnCount.prototype.getEntropy = function (rowCount) {
         var entropy = 0;
@@ -151,7 +155,7 @@ var Hw3Controllerv2 = (function (_super) {
         var _this = this;
         _super.call(this, elementId);
         this.data = [];
-        this.increment = 0.05;
+        this.increment = 0.1;
         this.maxEntropy = 1;
         this.minEntropy = 10;
         this.timeStepIndex = 0;
@@ -159,50 +163,6 @@ var Hw3Controllerv2 = (function (_super) {
         this.boxSize = 0;
         this.caView = null;
         this.caSelected = null;
-        var a = 0;
-        var b = 0;
-        var data = [];
-        for (var i = 0; i < length; ++i) {
-            data.push(Math.random());
-        }
-        //for (var b: number = 0; b <= 1; b += this.increment) {
-        //    for (var a: number = 0; a <= 1; a += this.increment) {
-        //        //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-        //        //this.data.push(ca);
-        //        this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //    }
-        //}
-        var b = 0;
-        //for (var a: number = 0; a <= 1; a += this.increment) {
-        //    this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //}
-        //b += this.increment;
-        //setTimeout(() => {
-        //    if (b <= 1) {
-        //        for (var a: number = 0; a <= 1; a += this.increment) {
-        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //        }
-        //        setTimeout(() => {
-        //            if (b <= 1) {
-        //                for (var a: number = 0; a <= 1; a += this.increment) {
-        //                    this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //                }
-        //            }
-        //            b += this.increment;
-        //        }, 30);
-        //    }
-        //    b += this.increment;
-        //}, 30);
-        //initialize() {
-        //    if (b <= 1) {
-        //        for (var a: number = 0; a <= 1; a += this.increment) {
-        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //        }
-        //        setTimeout(() => initialize(), 30);
-        //        b += this.increment;
-        //    }
-        //}
-        //initialize();
         this.initializeCa();
         var svg_size = length * 3;
         var svg = d3.select("main").append("canvas");
@@ -256,30 +216,39 @@ var Hw3Controllerv2 = (function (_super) {
     };
     Hw3Controllerv2.prototype.dostuff = function () {
         if (this.data.length > 0) {
-            var ca = this.data[this.timeStepIndex];
-            //  setTimeout(() => {
-            ca.makeNewRow();
-            var entropy = ca.getEntropySigma();
-            if (entropy > this.maxEntropy) {
-                this.maxEntropy = entropy;
-            }
-            if (entropy < this.minEntropy) {
-                this.minEntropy = entropy;
-            }
-            if (this.maxEntropy != this.minEntropy) {
-                entropy = (entropy - this.minEntropy) / (this.maxEntropy - this.minEntropy);
-            }
-            this.graphHeatMap(entropy, ca.getA() / this.increment, ca.getB() / this.increment, 
-            //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
-            "#0000" + gToBlueHexString(entropy));
-            // return;
-            // }, 0)
-            ++this.timeStepIndex;
-            if (this.timeStepIndex >= this.data.length) {
-                this.timeStepIndex = 0;
-            }
+            this.timestepOne();
         }
+        //if (this.data.length > 0) {
+        //    for (var i: number = 0; i < 10; ++i) {
+        //        this.timestepOne();
+        //    }
+        //}
         return;
+    };
+    Hw3Controllerv2.prototype.timestepOne = function () {
+        var ca = this.data[this.timeStepIndex];
+        //  setTimeout(() => {
+        ca.makeNewRow();
+        var entropy = ca.getEntropySigma();
+        if (entropy > this.maxEntropy) {
+            this.maxEntropy = entropy;
+        }
+        if (entropy < this.minEntropy) {
+            this.minEntropy = entropy;
+        }
+        if (this.maxEntropy != this.minEntropy) {
+            entropy = (entropy - this.minEntropy) / (this.maxEntropy - this.minEntropy);
+        }
+        this.graphHeatMap(entropy, ca.getA() / this.increment, ca.getB() / this.increment, 
+        //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
+        "#0000" + gToBlueHexString(entropy));
+        // return;
+        // }, 0)
+        //if (this.timeStepIndex < this.data.length / 2)
+        ++this.timeStepIndex;
+        if (this.timeStepIndex >= this.data.length) {
+            this.timeStepIndex = 0;
+        }
     };
     Hw3Controllerv2.prototype.graphHeatMap = function (value, x, y, color) {
         var context = this.svg.node().getContext("2d");

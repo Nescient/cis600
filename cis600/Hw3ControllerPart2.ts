@@ -48,18 +48,20 @@ class ColumnCount {
     }
 
     public getEntropyVariance() {
+        const offset: number = 50; // throw away everything under 50 timesteps
+        if (this.entropy.length < offset) { return 0; }
         var mean: number = 0;
-        for (var i: number = 0; i < this.entropy.length; ++i) {
+        for (var i: number = offset; i < this.entropy.length; ++i) {
             // mean += this.entropy[i] ? this.entropy[i] : 0;
             mean += this.entropy[i];
         }
-        mean /= this.entropy.length;
+        mean /= (this.entropy.length - offset);
         var variance: number = 0;
-        for (var i: number = 0; i < this.entropy.length; ++i) {
+        for (var i: number = offset; i < this.entropy.length; ++i) {
             var delta: number = this.entropy[i] - mean;
             variance += (delta * delta);
         }
-        return variance / this.entropy.length;
+        return variance / (this.entropy.length - offset);
     }
 
     private getEntropy(rowCount: number): number {
@@ -160,7 +162,7 @@ class Hw3Controllerv2 extends BaseTimer {
     private svg: any;
     private statsBox: any;
     private data: CellularAutomaton[] = [];
-    private increment: number = 0.05;
+    private increment: number = 0.1;
     private maxEntropy: number = 1;
     private minEntropy: number = 10;
     private timeStepIndex: number = 0;
@@ -171,53 +173,7 @@ class Hw3Controllerv2 extends BaseTimer {
 
     constructor(elementId: string) {
         super(elementId);
-        var a: number = 0;
-        var b: number = 0;
-        var data: number[] = [];
-        for (var i: number = 0; i < length; ++i) {
-            data.push(Math.random());
-        }
-        //for (var b: number = 0; b <= 1; b += this.increment) {
-        //    for (var a: number = 0; a <= 1; a += this.increment) {
-        //        //var ca: CellularAutomaton = new CellularAutomaton(a, b, data);
-        //        //this.data.push(ca);
-        //        this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //    }
-        //}
-        var b: number = 0;
-        //for (var a: number = 0; a <= 1; a += this.increment) {
-        //    this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //}
-        //b += this.increment;
-        //setTimeout(() => {
-        //    if (b <= 1) {
-        //        for (var a: number = 0; a <= 1; a += this.increment) {
-        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //        }
-        //        setTimeout(() => {
-        //            if (b <= 1) {
-        //                for (var a: number = 0; a <= 1; a += this.increment) {
-        //                    this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //                }
-        //            }
-        //            b += this.increment;
-        //        }, 30);
-        //    }
-        //    b += this.increment;
-        //}, 30);
-
-        //initialize() {
-        //    if (b <= 1) {
-        //        for (var a: number = 0; a <= 1; a += this.increment) {
-        //            this.data[this.data.length] = new CellularAutomaton(a, b, data);
-        //        }
-        //        setTimeout(() => initialize(), 30);
-        //        b += this.increment;
-        //    }
-        //}
-        //initialize();
         this.initializeCa();
-
         const svg_size: number = length * 3;
         var svg: any = d3.select("main").append("canvas");
         svg.attr("width", svg_size).attr("height", svg_size);
@@ -226,7 +182,6 @@ class Hw3Controllerv2 extends BaseTimer {
         ctx.scale(1, -1);
         this.boxCount = (1 / this.increment) + 1;
         this.boxSize = svg_size / this.boxCount;
-
 
         svg.on("click", () => this.onMouse());
 
@@ -276,34 +231,45 @@ class Hw3Controllerv2 extends BaseTimer {
 
     dostuff() {
         if (this.data.length > 0) {
-            var ca: CellularAutomaton = this.data[this.timeStepIndex];
-            //  setTimeout(() => {
-            ca.makeNewRow();
-            var entropy: number = ca.getEntropySigma();
-            if (entropy > this.maxEntropy) {
-                this.maxEntropy = entropy
-            }
-            if (entropy < this.minEntropy) {
-                this.minEntropy = entropy
-            }
-            if (this.maxEntropy != this.minEntropy) {
-                entropy = (entropy - this.minEntropy) / (this.maxEntropy - this.minEntropy);
-            }
-            this.graphHeatMap(
-                entropy,
-                ca.getA() / this.increment,
-                ca.getB() / this.increment,
-                //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
-                "#0000" + gToBlueHexString(entropy)
-            );
-            // return;
-            // }, 0)
-            ++this.timeStepIndex;
-            if (this.timeStepIndex >= this.data.length) {
-                this.timeStepIndex = 0;
-            }
+            this.timestepOne();
         }
+        //if (this.data.length > 0) {
+        //    for (var i: number = 0; i < 10; ++i) {
+        //        this.timestepOne();
+        //    }
+        //}
         return;
+    }
+
+    timestepOne() {
+        var ca: CellularAutomaton = this.data[this.timeStepIndex];
+        //  setTimeout(() => {
+        ca.makeNewRow();
+        var entropy: number = ca.getEntropySigma();
+        if (entropy > this.maxEntropy) {
+            this.maxEntropy = entropy
+        }
+        if (entropy < this.minEntropy) {
+            this.minEntropy = entropy
+        }
+        if (this.maxEntropy != this.minEntropy) {
+            entropy = (entropy - this.minEntropy) / (this.maxEntropy - this.minEntropy);
+        }
+        this.graphHeatMap(
+            entropy,
+            ca.getA() / this.increment,
+            ca.getB() / this.increment,
+            //"#" + gToGrayHexString(Math.round(entropy * 100) / 100)
+            "#0000" + gToBlueHexString(entropy)
+        );
+        // return;
+        // }, 0)
+        //if (this.timeStepIndex < this.data.length / 2)
+        ++this.timeStepIndex;
+        if (this.timeStepIndex >= this.data.length) {
+            this.timeStepIndex = 0;
+        }
+
     }
 
     graphHeatMap(value: number, x: number, y: number, color: string) {
