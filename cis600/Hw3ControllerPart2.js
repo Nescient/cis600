@@ -1,3 +1,5 @@
+// Copyright © Sam Savage 2016
+/// <reference path="CaViewer.ts"/>
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -153,6 +155,10 @@ var Hw3Controllerv2 = (function (_super) {
         this.maxEntropy = 1;
         this.minEntropy = 10;
         this.timeStepIndex = 0;
+        this.boxCount = 0;
+        this.boxSize = 0;
+        this.caView = null;
+        this.caSelected = null;
         var a = 0;
         var b = 0;
         var data = [];
@@ -198,25 +204,32 @@ var Hw3Controllerv2 = (function (_super) {
         //}
         //initialize();
         this.initializeCa();
+        var svg_size = length * 3;
         var svg = d3.select("main").append("canvas");
-        svg.attr("width", length * 3).attr("height", length * 3);
+        svg.attr("width", svg_size).attr("height", svg_size);
         var ctx = svg.node().getContext('2d');
         ctx.translate(0, svg.node().height);
         ctx.scale(1, -1);
+        this.boxCount = (1 / this.increment) + 1;
+        this.boxSize = svg_size / this.boxCount;
         svg.on("mousemove", function () { return _this.onMouse(); });
         this.svg = svg;
         this.statsBox = d3.select("main").append("div");
-        this.statsBox.attr("id", "hw3stats");
+        this.statsBox.attr("id", "hw3v2stats");
+        this.statsBox.attr("class", "hwstats");
         return;
     }
     Hw3Controllerv2.prototype.initHelper = function (b, data) {
         var _this = this;
         if (b <= 1) {
-            for (var a = 0; a <= 1; a += this.increment) {
-                this.data[this.data.length] = new CellularAutomaton(a, b, data);
-            }
-            setTimeout(function () { return _this.initHelper(b, data); }, 30);
-            b += this.increment;
+            setTimeout(function () {
+                var a = 0;
+                while (a <= 1) {
+                    _this.data[_this.data.length] = new CellularAutomaton(a, b, data);
+                    a = parseFloat((a + _this.increment).toFixed(3));
+                }
+                _this.initHelper(parseFloat((b + _this.increment).toFixed(3)), data);
+            }, 30);
         }
     };
     Hw3Controllerv2.prototype.initializeCa = function () {
@@ -225,25 +238,24 @@ var Hw3Controllerv2 = (function (_super) {
         for (var i = 0; i < length; ++i) {
             data.push(Math.random());
         }
-        this.initHelper(b, data);
+        this.initHelper(parseFloat(b.toFixed(3)), data);
     };
     Hw3Controllerv2.prototype.onMouse = function () {
         var width = parseInt(this.svg.style("width"));
         var height = parseInt(this.svg.style("height"));
+        var num_boxes = (1 / this.increment) + 1;
+        var box_size = width / num_boxes;
         var mouse_event = d3.event["currentTarget"];
         if (mouse_event) {
             var mouse_pos = d3.mouse(mouse_event);
-            var col_number = Math.floor(mouse_pos[0] / 2);
-            var row_number = Math.floor(mouse_pos[1] / 2);
+            var col_number = Math.floor((mouse_pos[0] / width) * this.boxCount);
+            var row_number = Math.floor(((height - mouse_pos[1]) / height) * this.boxCount);
+            this.printStats(row_number, col_number);
         }
         return;
     };
     Hw3Controllerv2.prototype.dostuff = function () {
-        var width = parseInt(this.svg.style("width"));
-        var height = parseInt(this.svg.style("height"));
-        var num_boxes = (1 / this.increment) + 1;
-        //for (var i: number = 0; i < this.data.length; ++i)
-        {
+        if (this.data.length > 0) {
             var ca = this.data[this.timeStepIndex];
             //  setTimeout(() => {
             ca.makeNewRow();
@@ -270,20 +282,56 @@ var Hw3Controllerv2 = (function (_super) {
         return;
     };
     Hw3Controllerv2.prototype.graphHeatMap = function (value, x, y, color) {
-        var total_width = parseInt(this.svg.style("width"));
-        var total_height = parseInt(this.svg.style("height"));
-        var num_boxes = (1 / this.increment) + 1;
-        var size = total_width / num_boxes;
-        if (x.toFixed() == "5" && y.toFixed() == "5") {
-            console.log(x.toString() + "," + y.toString() + ":" + value.toString());
-            console.log(color);
-        }
         var context = this.svg.node().getContext("2d");
         context.beginPath();
-        context.rect(x * size, y * size, size, size);
+        context.rect(x * this.boxSize, y * this.boxSize, this.boxSize, this.boxSize);
         context.fillStyle = color;
         context.fill();
         context.closePath();
+        return;
+    };
+    Hw3Controllerv2.prototype.printStats = function (row, col) {
+        var index = (row * this.boxCount) + col;
+        if (row >= 0 && col >= 0 && (index < this.data.length)) {
+            var ca = this.data[index];
+            if (!this.caSelected || this.caSelected.getA() != ca.getA() || this.caSelected.getB() != ca.getB()) {
+                this.caSelected = ca;
+                this.statsBox.selectAll("p").remove();
+                var info_p = this.statsBox.append("p");
+                var statstr = "row " + row + ", col " + col + " where a=" + ca.getA() + " and b=" + ca.getB();
+                info_p.text(statstr);
+                var entropy_p = this.statsBox.append("p");
+                entropy_p.text("entropy standard deviation: " + ca.getEntropySigma());
+                //if (this.caView) {
+                //    if (this.hw3view.a != ca.getA() || this.hw3view.b != ca.getB()) {
+                //        this.hw3view.stop();
+                //        delete this.hw3view;
+                //        this.statsBox.selectAll("canvas").remove();
+                //        var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
+                //        this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
+                //        this.hw3view.start();
+                //    }
+                //}
+                //else {
+                //    var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
+                //    this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
+                //    this.hw3view.start();
+                //}
+                if (this.caView) {
+                    this.caView.stop();
+                    delete this.caView;
+                    this.statsBox.selectAll("canvas").remove();
+                    var svg = this.statsBox.append("canvas").attr("width", length).attr("height", length);
+                    this.caView = new CaViewer(svg, length, ca.getA(), ca.getB());
+                    this.caView.start();
+                }
+                else {
+                    var svg = this.statsBox.append("canvas").attr("width", length).attr("height", length);
+                    this.caView = new CaViewer(svg, length, ca.getA(), ca.getB());
+                    this.caView.start();
+                }
+            }
+        }
         return;
     };
     return Hw3Controllerv2;

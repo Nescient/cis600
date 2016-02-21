@@ -1,4 +1,7 @@
-﻿var length = 400;
+﻿// Copyright © Sam Savage 2016
+/// <reference path="CaViewer.ts"/>
+
+var length = 400;
 const gMaxTimeStep: number = 4000;
 
 function gRealMod(n: number, m: number): number {
@@ -41,13 +44,13 @@ class ColumnCount {
     }
 
     public updateEntropy(rowCount: number) {
-        this.entropy[rowCount-1] = this.getEntropy(rowCount);
+        this.entropy[rowCount - 1] = this.getEntropy(rowCount);
     }
 
     public getEntropyVariance() {
         var mean: number = 0;
         for (var i: number = 0; i < this.entropy.length; ++i) {
-           // mean += this.entropy[i] ? this.entropy[i] : 0;
+            // mean += this.entropy[i] ? this.entropy[i] : 0;
             mean += this.entropy[i];
         }
         mean /= this.entropy.length;
@@ -161,6 +164,10 @@ class Hw3Controllerv2 extends BaseTimer {
     private maxEntropy: number = 1;
     private minEntropy: number = 10;
     private timeStepIndex: number = 0;
+    private boxCount: number = 0;
+    private boxSize: number = 0;
+    private caView: CaViewer = null;
+    private caSelected: CellularAutomaton = null;
 
     constructor(elementId: string) {
         super(elementId);
@@ -211,28 +218,35 @@ class Hw3Controllerv2 extends BaseTimer {
         //initialize();
         this.initializeCa();
 
-
+        const svg_size: number = length * 3;
         var svg: any = d3.select("main").append("canvas");
-        svg.attr("width", length * 3).attr("height", length * 3);
+        svg.attr("width", svg_size).attr("height", svg_size);
         var ctx = svg.node().getContext('2d');
         ctx.translate(0, svg.node().height);
         ctx.scale(1, -1);
+        this.boxCount = (1 / this.increment) + 1;
+        this.boxSize = svg_size / this.boxCount;
+
 
         svg.on("mousemove", () => this.onMouse());
 
         this.svg = svg;
         this.statsBox = d3.select("main").append("div");
-        this.statsBox.attr("id", "hw3stats");
+        this.statsBox.attr("id", "hw3v2stats");
+        this.statsBox.attr("class", "hwstats");
         return;
     }
 
     private initHelper(b: number, data: number[]) {
         if (b <= 1) {
-            for (var a: number = 0; a <= 1; a += this.increment) {
-                this.data[this.data.length] = new CellularAutomaton(a, b, data);
-            }
-            setTimeout(() => this.initHelper(b, data), 30);
-            b += this.increment;
+            setTimeout(() => {
+                var a: number = 0;
+                while (a <= 1) {
+                    this.data[this.data.length] = new CellularAutomaton(a, b, data);
+                    a = parseFloat((a + this.increment).toFixed(3));
+                }
+                this.initHelper(parseFloat((b + this.increment).toFixed(3)), data);
+            }, 30);
         }
     }
 
@@ -242,33 +256,26 @@ class Hw3Controllerv2 extends BaseTimer {
         for (var i: number = 0; i < length; ++i) {
             data.push(Math.random());
         }
-        this.initHelper(b, data);
+        this.initHelper(parseFloat(b.toFixed(3)), data);
     }
 
     onMouse() {
-        var width = parseInt(this.svg.style("width"));
-        var height = parseInt(this.svg.style("height"));
+        const width: number = parseInt(this.svg.style("width"));
+        const height: number = parseInt(this.svg.style("height"));
+        const num_boxes: number = (1 / this.increment) + 1;
+        const box_size: number = width / num_boxes;
         var mouse_event = d3.event["currentTarget"];
         if (mouse_event) {
             var mouse_pos = d3.mouse(mouse_event);
-            var col_number = Math.floor(mouse_pos[0] / 2);
-            var row_number = Math.floor(mouse_pos[1] / 2);
-            //var width = 3;
-
-            //if (row_number < this.data.length) {
-            //    var stats = this.getStats(this.data, row_number, col_number, width);
-            //    this.printStats(row_number, col_number, width, stats);
-            //}
+            var col_number: number = Math.floor((mouse_pos[0] / width) * this.boxCount);
+            var row_number: number = Math.floor(((height - mouse_pos[1]) / height) * this.boxCount);
+            this.printStats(row_number, col_number);
         }
         return;
     }
 
     dostuff() {
-        const width: number = parseInt(this.svg.style("width"));
-        const height: number = parseInt(this.svg.style("height"));
-        const num_boxes = (1 / this.increment) + 1;
-        //for (var i: number = 0; i < this.data.length; ++i)
-        {
+        if (this.data.length > 0) {
             var ca: CellularAutomaton = this.data[this.timeStepIndex];
             //  setTimeout(() => {
             ca.makeNewRow();
@@ -300,20 +307,65 @@ class Hw3Controllerv2 extends BaseTimer {
     }
 
     graphHeatMap(value: number, x: number, y: number, color: string) {
-        const total_width: number = parseInt(this.svg.style("width"));
-        const total_height: number = parseInt(this.svg.style("height"));
-        const num_boxes = (1 / this.increment) + 1;
-        const size: number = total_width / num_boxes;
-        if (x.toFixed() == "5" && y.toFixed() == "5") {
-            console.log(x.toString() + "," + y.toString() + ":" + value.toString());
-            console.log(color);
-        }
         var context = this.svg.node().getContext("2d");
         context.beginPath();
-        context.rect(x * size, y * size, size, size);
+        context.rect(x * this.boxSize, y * this.boxSize, this.boxSize, this.boxSize);
         context.fillStyle = color;
         context.fill();
         context.closePath();
         return;
+    }
+
+
+    printStats(row: number, col: number) {
+        const index: number = (row * this.boxCount) + col;
+        if (row >= 0 && col >= 0 && (index < this.data.length)) {
+            var ca: CellularAutomaton = this.data[index];
+            if (!this.caSelected || this.caSelected.getA() != ca.getA() || this.caSelected.getB() != ca.getB()) {
+                this.caSelected = ca;
+                this.statsBox.selectAll("p").remove();
+
+                var info_p = this.statsBox.append("p");
+                var statstr: string = "row " + row + ", col " + col + " where a=" + ca.getA() + " and b=" + ca.getB();
+                info_p.text(statstr);
+                var entropy_p = this.statsBox.append("p");
+                entropy_p.text("entropy standard deviation: " + ca.getEntropySigma());
+
+                //if (this.caView) {
+                //    if (this.hw3view.a != ca.getA() || this.hw3view.b != ca.getB()) {
+                //        this.hw3view.stop();
+                //        delete this.hw3view;
+                //        this.statsBox.selectAll("canvas").remove();
+                //        var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
+                //        this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
+                //        this.hw3view.start();
+                //    }
+                //}
+                //else {
+                //    var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
+                //    this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
+                //    this.hw3view.start();
+                //}
+                if (this.caView) {
+                    this.caView.stop();
+                    delete this.caView;
+                    this.statsBox.selectAll("canvas").remove();
+                    var svg: any = this.statsBox.append("canvas").attr("width", length).attr("height", length);
+                    this.caView = new CaViewer(svg, length, ca.getA(), ca.getB());
+                    this.caView.start();
+                }
+
+                else {
+                    var svg: any = this.statsBox.append("canvas").attr("width", length).attr("height", length);
+                    this.caView = new CaViewer(svg, length, ca.getA(), ca.getB());
+                    this.caView.start();
+                }
+            }
+        
+
+            // entropy_p.text("should be " + (col * this.increment).toString() + ", " + (row * this.increment).toString());
+
+           
+        } return;
     }
 }
