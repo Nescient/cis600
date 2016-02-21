@@ -30,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="BaseTimer.ts" />
+    <TypeScriptCompile Include="CaViewer.ts" />
     <TypeScriptCompile Include="Hw1Controller.ts" />
     <TypeScriptCompile Include="Hw2Controller.ts" />
     <TypeScriptCompile Include="Hw3Controller.ts" />
