@@ -212,7 +212,7 @@ var Hw3Controllerv2 = (function (_super) {
         ctx.scale(1, -1);
         this.boxCount = (1 / this.increment) + 1;
         this.boxSize = svg_size / this.boxCount;
-        svg.on("mousemove", function () { return _this.onMouse(); });
+        svg.on("click", function () { return _this.onMouse(); });
         this.svg = svg;
         this.statsBox = d3.select("main").append("div");
         this.statsBox.attr("id", "hw3v2stats");
@@ -302,21 +302,6 @@ var Hw3Controllerv2 = (function (_super) {
                 info_p.text(statstr);
                 var entropy_p = this.statsBox.append("p");
                 entropy_p.text("entropy standard deviation: " + ca.getEntropySigma());
-                //if (this.caView) {
-                //    if (this.hw3view.a != ca.getA() || this.hw3view.b != ca.getB()) {
-                //        this.hw3view.stop();
-                //        delete this.hw3view;
-                //        this.statsBox.selectAll("canvas").remove();
-                //        var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
-                //        this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
-                //        this.hw3view.start();
-                //    }
-                //}
-                //else {
-                //    var svg: any = this.statsBox.append("canvas").attr("width", 400).attr("width", 400);
-                //    this.hw3view = new CaViewer(svg, length, ca.getA(), ca.getB());
-                //    this.hw3view.start();
-                //}
                 if (this.caView) {
                     this.caView.stop();
                     delete this.caView;

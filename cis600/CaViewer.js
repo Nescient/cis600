@@ -6,6 +6,7 @@ var CaViewer = (function () {
         this.a = Math.random();
         this.b = Math.random();
         this.boxSize = 0;
+        this.width = 0;
         this.height = 0;
         this.timerToken = 0;
         this.timerTimeout = 10;
@@ -15,8 +16,9 @@ var CaViewer = (function () {
         this.a = a;
         this.b = b;
         this.svg = svg;
+        this.width = parseInt(this.svg.style("width"));
         this.height = parseInt(this.svg.style("height"));
-        this.boxSize = parseInt(this.svg.style("width")) / rowLength;
+        this.boxSize = this.width / rowLength;
         this.graphRow(this.currentRow, 0);
         return;
     }
@@ -61,25 +63,14 @@ var CaViewer = (function () {
     CaViewer.prototype.poly = function (u, x, v) {
         return (0.5 - 0.5 * Math.cos(Math.PI * (this.a + (this.a - this.b) * v + this.b * u * v - 2 * u * x * v)));
     };
-    //public addNewRow(row: number[]) {
-    //    this.data.push(this.currentRow);
-    //    this.graphRow(row, this.data.length);
-    //    this.currentRow = row;
-    //    return;
-    //}
     CaViewer.prototype.graphRow = function (row, yIndex) {
         var box_size = this.boxSize;
         var y_index = yIndex * this.boxSize;
         var context = this.svg.node().getContext("2d");
         if (y_index >= this.height) {
             //http://stackoverflow.com/a/8394985
-            var shiftContext = function (ctx, w, h, dx, dy) {
-                var clamp = function (high, value) { return Math.max(0, Math.min(high, value)); };
-                var imageData = ctx.getImageData(clamp(w, -dx), clamp(h, -dy), clamp(w, w - dx), clamp(h, h - dy));
-                ctx.clearRect(0, 0, w, h);
-                ctx.putImageData(imageData, 0, 0);
-            };
-            shiftContext(context, 400, this.height, 0, -1);
+            var img_data = context.getImageData(0, 1, this.width, this.height - 1);
+            context.putImageData(img_data, 0, 0);
             y_index = this.height - 1;
         }
         row.forEach(function (d, i) {
@@ -89,9 +80,6 @@ var CaViewer = (function () {
             context.fill();
             context.closePath();
         });
-        //var destCtx = destinationCanvas.getContext('2d');
-        //call its drawImage() function passing it the source canvas directly
-        //destCtx.drawImage(sourceCanvas, 0, 0);
         return;
     };
     return CaViewer;
