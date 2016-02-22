@@ -1,5 +1,6 @@
 ﻿// Copyright © Sam Savage 2016
 
+const gMinTimeStep: number = 100;  // timesteps below this will not be factored into entropy
 
 class ColumnCountv2 {
     private column: number = 0;
@@ -32,20 +33,16 @@ class ColumnCountv2 {
     }
 
     public getEntropyVariance(): number {
-        const offset: number = 0; // throw away everything under 50 timesteps
-        if (this.entropy.length <= offset) { return 0; }
-        var mean: number = 0;
-        for (var i: number = offset; i < this.entropy.length; ++i) {
-            // mean += this.entropy[i] ? this.entropy[i] : 0;
-            mean += this.entropy[i];
+        if (this.counts.length > 0) {
+            const mean: number = this.getAvgEntropy();
+            var variance: number = 0;
+            for (var i: number = 0; i < this.entropy.length; ++i) {
+                var delta: number = this.entropy[i] - mean;
+                variance += (delta * delta);
+            }
+            return variance / this.entropy.length;
         }
-        mean /= (this.entropy.length - offset);
-        var variance: number = 0;
-        for (var i: number = offset; i < this.entropy.length; ++i) {
-            var delta: number = this.entropy[i] - mean;
-            variance += (delta * delta);
-        }
-        return variance / (this.entropy.length - offset);
+        return 0;
     }
 
     private getEntropy(rowCount: number): number {
@@ -75,12 +72,9 @@ class CellularAutomatonv2 {
         this.b = b;
         this.currentRow = row;
         if (this.currentRow) {
-            //  this.rowCount = 1;
             for (var i: number = 0; i < this.currentRow.length; ++i) {
-                // this.counts.push(new ColumnCount(i));
                 this.counts[this.counts.length] = new ColumnCountv2(i);
             }
-            //   this.updateCountsAndEntropy();
         }
         return;
     }
@@ -96,7 +90,7 @@ class CellularAutomatonv2 {
     public makeNewRow(): boolean {
         if (this.rowCount < gMaxTimeStep) {
             var len: number = this.currentRow.length;
-            if ((this.rowCount > (gMaxTimeStep / 4)) && (this.getEntropySigma() == 0)) {
+            if ((this.rowCount > (gMaxTimeStep / 4)) && (this.getAvgEntropy() == 0)) {
                 return false;
             }
             var new_row: number[] = [];
@@ -121,10 +115,10 @@ class CellularAutomatonv2 {
 
     private setNextRow(row: number[]) {
         this.currentRow = row;
-        if (this.ignoreCount <= 100) {
+        if (this.ignoreCount <= gMinTimeStep) {
             ++this.ignoreCount;
         }
-        if (this.ignoreCount > 100) {
+        if (this.ignoreCount > gMinTimeStep) {
             ++this.rowCount;
             this.updateCountsAndEntropy();
         }
@@ -142,40 +136,44 @@ class CellularAutomatonv2 {
         }
     }
 
-    public getEntropySigma(): number {
-        var avg_variance: number = 0;
+    public getAvgEntropy(): number {
+        var avg: number = 0;
         for (var i: number = 0; i < this.counts.length; ++i) {
-            // avg_variance += this.counts[i].getEntropyVariance();
-            avg_variance += this.counts[i].getAvgEntropy();
+            avg += this.counts[i].getAvgEntropy();
         }
-        return avg_variance / this.counts.length;
-        //avg_variance /= this.counts.length;
-        //return Math.sqrt(avg_variance);
+        return avg / this.counts.length;
+    }
+
+    public getEntropySigma(): number {
+        var avg: number = 0;
+        for (var i: number = 0; i < this.counts.length; ++i) {
+            avg += this.counts[i].getEntropyVariance();
+        }
+        avg /= this.counts.length;
+        return Math.sqrt(avg);
     }
 }
 
 class Hw3Controllerv3 extends BaseTimer {
     private svg: any;
     private statsBox: any;
-    //private data: CellularAutomaton[] = [];
     private increment: number = 0.05;
     private maxEntropy: number = 10;
     private minEntropy: number = 0;
     private timeStepIndex: number = 0;
     private boxCount: number = 0;
     private boxSize: number = 0;
-    //private caView: CaViewer = null;
-    //private caSelected: CellularAutomaton = null;
-    ca: CellularAutomatonv2 = null;
-    a: number = 0;
-    b: number = 0;
-    caIC: number[] = [];
-    doneCAs: { a: number, b: number, e: number }[] = [];
+    private ca: CellularAutomatonv2 = null;
+    private a: number = 0;
+    private b: number = 0;
+    private caIC: number[] = [];
+    private doneCAs: { a: number, b: number, e: number }[] = [];
+    private caView: CaViewer = null;
+    private caSelected: { a: number, b: number } = null;
 
     constructor(elementId: string) {
         super(elementId);
         console.log("constructor");
-        //this.initializeCa();
         const svg_size: number = length * 3;
         var svg: any = d3.select("main").append("canvas");
         svg.attr("width", svg_size).attr("height", svg_size);
@@ -216,7 +214,7 @@ class Hw3Controllerv3 extends BaseTimer {
 
     dostuff() {
         if (this.ca.makeNewRow()) {
-            var entropy: number = this.ca.getEntropySigma();
+            var entropy: number = this.ca.getAvgEntropy();
             if (entropy > this.maxEntropy) {
                 this.maxEntropy = entropy
             }
@@ -237,7 +235,7 @@ class Hw3Controllerv3 extends BaseTimer {
             this.doneCAs.push({
                 a: this.ca.getA(),
                 b: this.ca.getB(),
-                e: this.ca.getEntropySigma()
+                e: this.ca.getAvgEntropy()
             });
             delete this.ca;
             this.ca = this.nextCA();
@@ -276,25 +274,38 @@ class Hw3Controllerv3 extends BaseTimer {
     printStats(row: number, col: number) {
         const index: number = (row * this.boxCount) + col;
         var cainfo: { a: number, b: number, e: number } = (this.ca) ?
-            { a: this.ca.getA(), b: this.ca.getB(), e: this.ca.getEntropySigma() } :
+            { a: this.ca.getA(), b: this.ca.getB(), e: this.ca.getAvgEntropy() } :
             { a: -1, b: -1, e: -1 };
         if (row >= 0 && col >= 0 && (index < this.doneCAs.length)) {
             cainfo = this.doneCAs[index];
         }
-        this.statsBox.selectAll("p").remove();
-        var info_p = this.statsBox.append("p");
-        var entropy_p = this.statsBox.append("p");
-        var stats_p = this.statsBox.append("p");
 
-        var statstr: string = "row " + row + ", col " + col + " where a=" + cainfo.a + " and b=" + cainfo.b;
-        info_p.text(statstr);
+        if (!this.caSelected || this.caSelected.a != cainfo.a || this.caSelected.b != cainfo.b) {
+            this.caSelected = cainfo;
 
-        entropy_p.text("entropy standard deviation: " + cainfo.e);
+            this.statsBox.selectAll("p").remove();
+            var info_p = this.statsBox.append("p");
+            var entropy_p = this.statsBox.append("p");
+            var stats_p = this.statsBox.append("p");
 
-        if (this.ca) {
-            stats_p.text("row count:" + this.ca.rowCount);
+            var statstr: string = "row " + row + ", col " + col + " where a=" + cainfo.a + " and b=" + cainfo.b;
+            info_p.text(statstr);
+
+            entropy_p.text("average entropy: " + cainfo.e);
+
+            if (this.ca) {
+                stats_p.text("row count:" + this.ca.rowCount);
+            }
+
+            if (this.caView) {
+                this.caView.stop();
+                delete this.caView;
+                this.statsBox.selectAll("canvas").remove();
+            }
+            var svg: any = this.statsBox.append("canvas").attr("width", length).attr("height", length);
+            this.caView = new CaViewer(svg, length, cainfo.a, cainfo.b);
+            this.caView.start();
         }
-
         return;
     }
 

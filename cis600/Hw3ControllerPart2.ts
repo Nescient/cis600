@@ -2,7 +2,7 @@
 /// <reference path="CaViewer.ts"/>
 
 var length = 400;
-const gMaxTimeStep: number = 4000;
+const gMaxTimeStep: number = 1000;
 
 function gRealMod(n: number, m: number): number {
     // javascript mod doesnt work with negative numbers
