@@ -144,9 +144,9 @@ class CellularAutomaton {
     private updateCountsAndEntropy() {
         for (var i: number = 0; i < this.currentRow.length; ++i) {
             var value: string =
+                gToHexString(this.currentRow[gRealMod(i - 1, this.currentRow.length)]) +
                 gToHexString(this.currentRow[gRealMod(i, this.currentRow.length)]) +
-                gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]) +
-                gToHexString(this.currentRow[gRealMod(i + 2, this.currentRow.length)]);
+                gToHexString(this.currentRow[gRealMod(i + 1, this.currentRow.length)]);
             this.counts[i].addCount(value);
             this.counts[i].updateEntropy(this.rowCount);
         }

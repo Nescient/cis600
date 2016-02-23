@@ -1,4 +1,5 @@
-﻿/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
+﻿// Copyright © Sam Savage 2016
+/// <reference path="Scripts/typings/jquery/jquery.d.ts" />
 
 abstract class BaseTimer {
     timeId: string;

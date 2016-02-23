@@ -1,4 +1,5 @@
-﻿var length = 400;
+﻿// Copyright © Sam Savage 2016
+var length = 400;
 
 class Hw3Controller extends BaseTimer {
     svg: any;
