@@ -1,6 +1,6 @@
 ﻿// Copyright © Sam Savage 2016
 
-const gMinTimeStep: number = 100;  // timesteps below this will not be factored into entropy
+const gMinTimeStep: number = 500;  // timesteps below this will not be factored into entropy
 
 class ColumnCountv2 {
     private column: number = 0;
@@ -298,7 +298,7 @@ class Hw3Controllerv3 extends BaseTimer {
             entropy_p.text("average entropy: " + cainfo.e);
 
             if (this.ca) {
-                stats_p.text("row count:" + this.ca.rowCount);
+                stats_p.text("row count: " + this.ca.rowCount + "(" + this.ca.ignoreCount + ")");
             }
 
             if (this.caView) {
@@ -309,6 +309,34 @@ class Hw3Controllerv3 extends BaseTimer {
             var svg: any = this.statsBox.append("canvas").attr("width", length).attr("height", length);
             this.caView = new CaViewer(svg, length, cainfo.a, cainfo.b);
             this.caView.start();
+        }
+        else {
+            var row_count: number = this.ca ? this.ca.rowCount : -1;
+            var ignore_count: number = this.ca ? this.ca.ignoreCount : -1;
+            this.statsBox.selectAll("p")[0].map(function (d, i) {
+                if (d.textContent.indexOf("entropy") != -1) {
+                    d.textContent = ("average entropy: " + cainfo.e);
+                }
+                else if (d.textContent.indexOf("row count") != -1) {
+                    d.textContent = ("row count: " + row_count + "(" + ignore_count + ")");
+                }
+            });
+            //this.statsBox.selectAll("p")[0].each(function (d, i) {
+            //    console.log(i);
+            //    console.log(d);
+            //});
+            //this.statsBox.selectAll("p").each(function (d, i) {
+            //    console.log(i);
+            //    console.log(d);
+            //});
+            //this.statsBox.selectAll("p").each(() => function (d, i) {
+            //    if (d.text().indexOf("entropy") != -1) {
+            //        entropy_p.text("average entropy: " + cainfo.e);
+            //    }
+            //    else if (d.text().indexOf("row count") != -1) {
+            //        stats_p.text("row count:" + this.ca.rowCount);
+            //    }
+            //});
         }
         return;
     }
