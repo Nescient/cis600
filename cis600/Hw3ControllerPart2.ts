@@ -126,8 +126,12 @@ class CellularAutomaton {
     }
 
     // taken from Blair's ALife1Dim Java program
-    private poly(a: number, b: number, u: number, x: number, v: number): number {
-        return (0.5 - 0.5 * Math.cos(Math.PI * (a + (a - b) * v + b * u * v - 2 * u * x * v)));
+    public poly(a: number, b: number, u: number, x: number, v: number): number {
+        return (0.5 - 0.5 * Math.cos(Math.PI *
+            (a + (a + b) * u +
+                (a - b) * v +
+                b * u * v -
+                2 * u * x * v)));
     }
 
     private setNextRow(row: number[]) {

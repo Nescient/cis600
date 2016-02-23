@@ -85,8 +85,12 @@ class Hw3Controller extends BaseTimer {
     }
 
     // taken from Blair's ALife1Dim Java program
-    poly(u: number, x: number, v: number): number {
-        return (0.5 - 0.5 * Math.cos(Math.PI * (this.a + (this.a - this.b) * v + this.b * u * v - 2 * u * x * v)));
+    public poly(u: number, x: number, v: number): number {
+        return (0.5 - 0.5 * Math.cos(Math.PI *
+            (this.a + (this.a + this.b) * u +
+                (this.a - this.b) * v +
+                this.b * u * v -
+                2 * u * x * v)));
     }
 
     toHexString(val: number): string {
@@ -202,7 +206,7 @@ class Hw3Controller extends BaseTimer {
 
         
         //info_p.text(info_p.text() + "     ----------     " + "shannon's entropy: " + (0 - entropy));
-    //    info_p.
+        //    info_p.
         entropy_p.text("shannon's entropy: " + (0 - entropy));
 
         return;
