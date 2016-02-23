@@ -262,9 +262,9 @@ class Hw3Controllerv3 extends BaseTimer {
 
     private nextCA(): CellularAutomatonv2 {
         var ca: CellularAutomatonv2 = null;
-        if (this.b < 1) {
+        if (this.b <= 2) {
             ca = new CellularAutomatonv2(this.a, this.b, this.caIC);
-            if (this.a < 1) {
+            if (this.a <= 2) {
                 this.a = parseFloat((this.a + this.increment).toFixed(3));
             }
             else {
